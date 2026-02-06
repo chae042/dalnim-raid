@@ -341,6 +341,10 @@
     font-size: 12px;
     color: #444;
   }
+  .player-chip.no-time {
+    opacity: 0.4;
+    filter: grayscale(100%);
+  }
 </style>
 </head>
 <body>
@@ -425,7 +429,7 @@ async function fetchSheetData() {
     
     allData = { nem1: [], nem2: [] };
     
-    for (let i = 5; i < rows.length; i++) {
+    for (let i = 0; i < rows.length; i++) {
       const row = rows[i].c;
       if (!row) continue;
       
@@ -453,9 +457,10 @@ async function fetchSheetData() {
         days[day] = !isChecked;
       });
       
+      const noTime = !startTime && !endTime;
       const hours = getAvailableHours(startTime, endTime);
       
-      const player = { nickname, job, confirmed, days, hours, note, startTime, endTime };
+      const player = { nickname, job, confirmed, days, hours, note, startTime, endTime, noTime };
       
       if (currentType === '1넴') {
         allData.nem1.push(player);
@@ -547,7 +552,8 @@ function renderUI() {
     return `<div class="players-wrap">${players.map(p => {
       const jobInfo = getJobInfo(p.job);
       const confirmedClass = p.confirmed ? 'confirmed' : '';
-      return `<span class="player-chip ${jobInfo.class} ${confirmedClass}">
+      const noTimeClass = p.noTime ? 'no-time' : '';
+      return `<span class="player-chip ${jobInfo.class} ${confirmedClass} ${noTimeClass}">
         <span class="job-icon">${jobInfo.icon}</span>${p.nickname}
       </span>`;
     }).join('')}</div>`;
