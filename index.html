@@ -466,9 +466,11 @@ async function fetchSheetData() {
 
     console.log('1넴:', allData.nem1.map(p => p.nickname));
     console.log('2넴:', allData.nem2.map(p => p.nickname));
-    console.log('Raw row 6:', rows[6]?.c?.map((cell, i) => `${i}: ${cell?.v}`));
-    console.log('Raw row 7:', rows[7]?.c?.map((cell, i) => `${i}: ${cell?.v}`));
-    console.log('Raw row 8:', rows[8]?.c?.map((cell, i) => `${i}: ${cell?.v}`));
+    for (let i = 0; i < 15; i++) {
+      const row = rows[i]?.c;
+      const nickname = row?.[4]?.v;
+      if (nickname) console.log(`Row ${i}: ${nickname}`);
+    }
     
     renderUI();
   } catch (error) {
