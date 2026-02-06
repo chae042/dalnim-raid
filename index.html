@@ -553,7 +553,7 @@ function renderUI() {
     const hourLabel = hour < 6 ? `익일 ${hour.toString().padStart(2, '0')}시` : `${hour.toString().padStart(2, '0')}시`;
     
     return `
-      <tr class="${isPeak ? 'peak-row' : ''}">
+      <tr>
         <td class="time-cell">${hourLabel}</td>
         <td class="players-cell">${renderPlayers(nem1Players)}</td>
         <td class="players-cell">${renderPlayers(nem2Players)}</td>
@@ -578,14 +578,6 @@ function renderUI() {
       `).join('')}
     </div>
     
-    <div class="summary-bar">
-      <div class="summary-item peak">
-        <span>⏰</span> 피크: ${peak.hour}시 (${peak.count}명)
-      </div>
-      <div class="summary-item info">
-        <span>👥</span> 1넴: ${allData.nem1.filter(p => p.days[currentDay]).length}명 / 2넴: ${allData.nem2.filter(p => p.days[currentDay]).length}명
-      </div>
-    </div>
     
     <table class="schedule-table">
       <thead>
@@ -602,12 +594,12 @@ function renderUI() {
     </table>
     
     <div class="legend">
-      <div class="legend-item"><div class="legend-chip" style="background: rgba(59, 130, 246, 0.4);"></div> 탱커</div>
-      <div class="legend-item"><div class="legend-chip" style="background: rgba(239, 68, 68, 0.4);"></div> 근딜</div>
-      <div class="legend-item"><div class="legend-chip" style="background: rgba(249, 115, 22, 0.4);"></div> 원딜</div>
-      <div class="legend-item"><div class="legend-chip" style="background: rgba(168, 85, 247, 0.4);"></div> 마딜</div>
-      <div class="legend-item"><div class="legend-chip" style="background: rgba(34, 197, 94, 0.4);"></div> 힐러</div>
-      <div class="legend-item"><div class="legend-chip" style="background: rgba(234, 179, 8, 0.4);"></div> 서포트</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(59, 130, 246, 0.4);"></div> 수호성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(239, 68, 68, 0.4);"></div> 검성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(249, 115, 22, 0.4);"></div> 궁성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(168, 85, 247, 0.4);"></div> 마도성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(34, 197, 94, 0.4);"></div> 치유성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(234, 179, 8, 0.4);"></div> 호법성</div>
       <div class="legend-item">✨ 금테 = 참여 확정</div>
     </div>
     
