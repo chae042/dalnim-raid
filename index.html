@@ -425,6 +425,8 @@ function getAvailableHours(startTime, endTime) {
 
 let allData = { nem1: [], nem2: [] };
 let currentDay = '수';
+let raidTitle = '트라이팟';
+let sheetPeriod = '';
 
 async function fetchSheetData() {
   const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
@@ -436,6 +438,19 @@ async function fetchSheetData() {
     
     const rows = json.table.rows;
     let currentType = '1넴';
+    
+    // 시트 제목에서 던전 이름 추출 (예: "2월 4일~10일 루드라 일정")
+    const titleRow = rows[0]?.c;
+    if (titleRow) {
+      const titleText = titleRow[2]?.v || '';
+      // "루드라", "트라이팟" 등 던전 이름 추출
+      const match = titleText.match(/(\d+월\s*\d+일?~\d+일)/);
+      if (match) sheetPeriod = match[1];
+      
+      // 던전 이름 추출 (루드라, 쿠로스 등)
+      const dungeonMatch = titleText.match(/(루드라|쿠로스|칼바리|[가-힣]+)\s*(트라이팟|일정)/);
+      if (dungeonMatch) raidTitle = dungeonMatch[1] + ' 트라이팟';
+    }
     
     allData = { nem1: [], nem2: [] };
     
@@ -587,9 +602,9 @@ function renderUI() {
   
   document.getElementById('app').innerHTML = `
     <div class="header">
-      <h1>🌙 루드라 트라이팟</h1>
+      <h1>🌙 ${raidTitle}</h1>
       <h2>${currentDay}요일</h2>
-      <div class="subtitle">시간대별 참여 가능 인원</div>
+      <div class="subtitle">${sheetPeriod ? sheetPeriod + ' · ' : ''}시간대별 참여 가능 인원</div>
     </div>
     
     <div class="day-tabs">
