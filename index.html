@@ -474,8 +474,10 @@ console.log('Sample row (여름):', rows[8]?.c?.map((cell, i) => `${i}: ${cell?.
       // 요일별 가능 여부 (체크 = 못함, 미체크 = 가능)
       const days = {};
       DAYS.forEach((day, idx) => {
-        const val = getValue(DAY_COLS[idx]);
-        days[day] = val !== 'TRUE';
+        const colIdx = DAY_COLS[idx];
+        const cell = row[colIdx];
+        const isChecked = cell?.v === true || cell?.v === 'TRUE' || cell?.f === 'TRUE';
+        days[day] = !isChecked; // 체크 안된 날 = 가능
       });
       
       const hours = getAvailableHours(startTime, endTime);
