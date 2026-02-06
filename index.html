@@ -362,6 +362,22 @@
     font-size: 13px;
     font-style: italic;
   }
+/* Two Column Layout */
+  .two-column {
+    display: flex;
+    gap: 20px;
+  }
+
+  .two-column .column {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 800px) {
+    .two-column {
+      flex-direction: column;
+    }
+  }
 </style>
 </head>
 <body>
@@ -620,8 +636,14 @@ function renderUI() {
       </div>
     </div>
     
-    ${renderSection('1️⃣ 1네임드', 'nem1', 'nem1')}
-    ${renderSection('2️⃣ 2네임드', 'nem2', 'nem2')}
+    <div class="two-column">
+      <div class="column">
+        ${renderSection('1️⃣ 1네임드', 'nem1', 'nem1')}
+      </div>
+      <div class="column">
+        ${renderSection('2️⃣ 2네임드', 'nem2', 'nem2')}
+      </div>
+    </div>
     
     <div class="legend">
       <div class="legend-item"><div class="legend-chip" style="background: rgba(59, 130, 246, 0.4);"></div> 탱커 (수호성)</div>
