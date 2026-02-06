@@ -383,6 +383,7 @@ const API_KEY = ''; // 공개 시트는 API 키 없이 가능
 // 요일 설정
 const DAYS = ['수', '목', '금', '토', '일', '월', '화'];
 const DAY_COLS = [9, 10, 11, 12, 13, 14, 15]; // 요일 컬럼 인덱스
+  console.log('Sheet data loaded');
 
 // 직업 매핑
 const JOB_MAP = {
@@ -443,6 +444,8 @@ async function fetchSheetData() {
     const json = JSON.parse(text.substring(47, text.length - 2));
     
     const rows = json.table.rows;
+    console.log('Total rows:', rows.length);
+console.log('Sample row:', rows[8]?.c);
     let currentType = '1넴';
     
     allData = { nem1: [], nem2: [] };
