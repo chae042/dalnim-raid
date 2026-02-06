@@ -260,6 +260,18 @@
     color: #c084fc;
   }
 
+  .job-assassin {
+    background: rgba(236, 72, 153, 0.15);
+    border-color: rgba(236, 72, 153, 0.3);
+    color: #ec4899;
+  }
+
+  .job-summoner {
+    background: rgba(20, 184, 166, 0.15);
+    border-color: rgba(20, 184, 166, 0.3);
+    color: #14b8a6;
+  }
+
   .job-healer {
     background: rgba(34, 197, 94, 0.15);
     border-color: rgba(34, 197, 94, 0.3);
@@ -370,6 +382,8 @@ const JOB_MAP = {
   '마도성': { class: 'job-magic', icon: '◆' },
   '치유성': { class: 'job-healer', icon: '✚' },
   '호법성': { class: 'job-support', icon: '◈' },
+  '살성': { class: 'job-assassin', icon: '🗡' },
+  '정령성': { class: 'job-summoner', icon: '🔮' },
 };
 
 function getJobInfo(job) {
@@ -609,6 +623,8 @@ function renderUI() {
       <div class="legend-item"><div class="legend-chip" style="background: rgba(168, 85, 247, 0.4);"></div> 마도성</div>
       <div class="legend-item"><div class="legend-chip" style="background: rgba(34, 197, 94, 0.4);"></div> 치유성</div>
       <div class="legend-item"><div class="legend-chip" style="background: rgba(234, 179, 8, 0.4);"></div> 호법성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(236, 72, 153, 0.4);"></div> 살성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(20, 184, 166, 0.4);"></div> 정령성</div>
     </div>
     
     ${notes.length > 0 ? `
