@@ -469,8 +469,8 @@ async function fetchSheetData() {
       }
     }
 
-    console.log('1넴:', allData.nem1.map(p => p.nickname));
-    console.log('2넴:', allData.nem2.map(p => p.nickname));
+    console.log('1넴:', allData.nem1.map(p => `${p.nickname}(확정:${p.confirmed})`));
+    console.log('2넴:', allData.nem2.map(p => `${p.nickname}(확정:${p.confirmed})`));
     for (let i = 0; i < 15; i++) {
       const row = rows[i]?.c;
       const nickname = row?.[4]?.v;
