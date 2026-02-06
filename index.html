@@ -463,7 +463,9 @@ async function fetchSheetData() {
         allData.nem2.push(player);
       }
     }
-    
+
+    console.log('1넴:', allData.nem1.map(p => p.nickname));
+    console.log('2넴:', allData.nem2.map(p => p.nickname));
     renderUI();
   } catch (error) {
     document.getElementById('app').innerHTML = `
