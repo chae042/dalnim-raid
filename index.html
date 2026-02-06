@@ -445,7 +445,7 @@ async function fetchSheetData() {
     
     const rows = json.table.rows;
     console.log('Total rows:', rows.length);
-console.log('Sample row:', rows[8]?.c);
+console.log('Sample row (여름):', rows[8]?.c?.map((cell, i) => `${i}: ${cell?.v}`));
     let currentType = '1넴';
     
     allData = { nem1: [], nem2: [] };
