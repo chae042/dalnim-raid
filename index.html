@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>🌙 달님이 - 파티 일정</title>
+<title>🌙 달님봇 - 파티 일정</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
@@ -1485,7 +1485,7 @@
     <div id="notes-section"></div>
 
     <div class="footer">
-      🌙 달님이 · <span id="update-time"></span>
+      🌙 달님봇 · <span id="update-time"></span>
     </div>
   </div>
 
@@ -2260,12 +2260,24 @@ function renderViewMode(container, players) {
     return result;
   };
   
-  // 네임드별 레인맵 (닉네임 가나다순 - 편집 모드와 동일)
+  // 네임드별 레인맵 (nemLaneOrders 기반 - 편집 모드와 동일)
   const nemLaneMap = {};
   const nemLaneCount = {};
   nemNames.forEach(nem => {
     const uniquePlayers = getUniquePlayersForNem(nem);
-    const sorted = [...uniquePlayers].sort((a, b) => a.닉네임.localeCompare(b.닉네임, 'ko'));
+    
+    // nemLaneOrders에 없는 플레이어 추가
+    uniquePlayers.forEach(p => {
+      if (!nemLaneOrders[nem].includes(p.닉네임)) {
+        nemLaneOrders[nem].push(p.닉네임);
+      }
+    });
+    
+    // nemLaneOrders 순서대로 정렬 (저장된 순서 유지)
+    const sorted = nemLaneOrders[nem]
+      .filter(name => uniquePlayers.some(p => p.닉네임 === name))
+      .map(name => uniquePlayers.find(p => p.닉네임 === name));
+    
     const laneMap = {};
     sorted.forEach((p, idx) => laneMap[p.닉네임] = idx);
     nemLaneMap[nem] = laneMap;
