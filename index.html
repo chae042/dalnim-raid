@@ -635,11 +635,8 @@
 
   <!-- 일정 보기 패널 -->
   <div id="view-panel" class="panel active">
-    <!-- 레이드 타입 탭 -->
-    <div class="raid-tabs">
-      <div class="raid-tab active" data-raid="트라이팟" onclick="selectRaidType('트라이팟')">트라이팟</div>
-      <div class="raid-tab" data-raid="클리어팟" onclick="selectRaidType('클리어팟')">클리어팟</div>
-    </div>
+    <!-- 레이드 타입 탭 (동적 생성) -->
+    <div class="raid-tabs" id="raid-tabs"></div>
 
     <!-- 보기/편집 모드 토글 -->
     <div class="mode-toggle">
@@ -796,8 +793,10 @@ const JOB_MAP = {
 };
 
 let allPlayers = [];
+let raidSettings = [];
+let raidIdToName = {};
 let currentDay = '금';
-let currentRaidType = '트라이팟';
+let currentRaidType = '';
 let currentMode = 'view';
 
 // 메인 탭 전환
@@ -810,8 +809,16 @@ function showMainTab(tabName) {
   document.getElementById(`${tabName}-panel`).classList.add('active');
   
   if (tabName === 'view') {
-    loadPlayerList();
+    initViewPanel();
   }
+}
+
+// 보기 패널 초기화 (레이드 설정 먼저 로드)
+async function initViewPanel() {
+  if (raidSettings.length === 0) {
+    await loadRaidSettings();
+  }
+  await loadPlayerList();
 }
 
 // 레이드 타입 선택
@@ -866,6 +873,54 @@ function getTimeRange(startTime, endTime) {
   return { startIdx, endIdx };
 }
 
+// 레이드 설정 불러오기
+async function loadRaidSettings() {
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getRaidSettings' })
+    });
+    const result = await response.json();
+    
+    if (result.raidSettings && result.raidSettings.length > 0) {
+      raidSettings = result.raidSettings.map(item => {
+        const props = item.properties || item;
+        return {
+          id: item.id,
+          레이드명: props.레이드명?.title?.[0]?.text?.content || '',
+          레이드종류: props.레이드종류?.select?.name || ''
+        };
+      });
+      
+      // ID → 이름 매핑
+      raidIdToName = {};
+      raidSettings.forEach(r => {
+        raidIdToName[r.id] = r.레이드명;
+      });
+      
+      // 첫 번째를 기본값으로
+      if (raidSettings.length > 0 && !currentRaidType) {
+        currentRaidType = raidSettings[0].레이드명;
+      }
+      
+      renderRaidTabs();
+    }
+  } catch (error) {
+    console.error('레이드 설정 로드 실패:', error);
+  }
+}
+
+// 레이드 탭 렌더링
+function renderRaidTabs() {
+  const container = document.getElementById('raid-tabs');
+  container.innerHTML = raidSettings.map((r, idx) => `
+    <div class="raid-tab ${r.레이드명 === currentRaidType ? 'active' : ''}" 
+         data-raid="${r.레이드명}" 
+         onclick="selectRaidType('${r.레이드명}')">${r.레이드명}</div>
+  `).join('');
+}
+
 // 플레이어 목록 불러오기
 async function loadPlayerList() {
   const container = document.getElementById('schedule-view');
@@ -887,6 +942,14 @@ async function loadPlayerList() {
     if (result.success && result.data) {
       allPlayers = result.data.map(player => {
         const props = player.properties || player;
+        // 레이드종류가 relation이면 ID로 이름 찾기
+        let raidType = '';
+        if (props.레이드종류?.relation?.[0]?.id) {
+          raidType = raidIdToName[props.레이드종류.relation[0].id] || '';
+        } else {
+          raidType = props.레이드종류?.select?.name || props.레이드종류 || '';
+        }
+        
         return {
           닉네임: props.닉네임?.title?.[0]?.text?.content || props.닉네임 || '???',
           직업: props.직업?.select?.name || props.직업 || '',
@@ -894,7 +957,7 @@ async function loadPlayerList() {
           시작시간: props.시작시간?.select?.name || props.시작시간 || '상관없음',
           종료시간: props.종료시간?.select?.name || props.종료시간 || '상관없음',
           못하는요일: props.못하는요일?.multi_select?.map(m => m.name) || props.못하는요일 || [],
-          레이드종류: props.레이드종류?.select?.name || props.레이드종류 || '트라이팟',
+          레이드종류: raidType,
           참고사항: props.참고사항?.rich_text?.[0]?.text?.content || props.참고사항 || ''
         };
       });
