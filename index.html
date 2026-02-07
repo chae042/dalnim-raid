@@ -2281,33 +2281,36 @@ function renderEditMode(container, players) {
   const nemData = {};
   nemNames.forEach(nem => {
     const players = getUniquePlayersForNem(nem);
-    const names = players.map(p => p.닉네임);
     
-    // 새 플레이어만 끝에 추가 (기존 순서는 건드리지 않음)
-    names.forEach(n => { 
-      if (!nemLaneOrders[nem].includes(n)) nemLaneOrders[nem].push(n); 
+    // 시작시간 순으로 정렬
+    const sorted = [...players].sort((a, b) => {
+      const aStart = TIME_ORDER.indexOf(a.시작시간);
+      const bStart = TIME_ORDER.indexOf(b.시작시간);
+      return aStart - bStart;
     });
     
-    // 현재 존재하는 플레이어만 필터링 (순서는 유지)
-    const activePlayers = nemLaneOrders[nem]
-      .map(n => players.find(p => p.닉네임 === n))
-      .filter(Boolean);
-    
-    // 레인맵: 원래 순서 기준으로 레인 번호 부여
+    // 겹침 방지 레인 할당 (보기 모드와 동일)
+    const lanes = []; // 각 레인의 종료 시간 인덱스
     const laneMap = {};
-    activePlayers.forEach(p => {
-      laneMap[p.닉네임] = nemLaneOrders[nem].indexOf(p.닉네임);
-    });
     
-    // 최대 레인 번호 + 1
-    const maxLane = activePlayers.length > 0 
-      ? Math.max(...activePlayers.map(p => laneMap[p.닉네임])) + 1 
-      : 1;
+    sorted.forEach(p => {
+      const startIdx = TIME_ORDER.indexOf(p.시작시간);
+      const endIdx = TIME_ORDER.indexOf(p.종료시간);
+      
+      let assignedLane = -1;
+      for (let i = 0; i < lanes.length; i++) {
+        if (lanes[i] < startIdx) { assignedLane = i; break; }
+      }
+      if (assignedLane === -1) { assignedLane = lanes.length; lanes.push(-1); }
+      
+      laneMap[p.닉네임] = assignedLane;
+      lanes[assignedLane] = endIdx;
+    });
     
     nemData[nem] = {
       players,
       laneMap,
-      laneCount: maxLane
+      laneCount: lanes.length || 1
     };
   });
   
