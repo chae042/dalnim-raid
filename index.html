@@ -582,6 +582,8 @@
   /* 편집 모드 테이블 */
   .schedule-table.edit-table {
     border-collapse: collapse;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .schedule-table.edit-table .time-header {
@@ -2813,21 +2815,44 @@ document.addEventListener('keydown', (e) => {
 // ============================================
 // 박스 선택 이벤트 (드래그)
 // ============================================
-document.addEventListener('mousedown', (e) => {
+document.addEventListener('pointerdown', (e) => {
   if (currentMode !== 'edit') return;
   
   const clickedChip = e.target.closest('.player-chip');
   
-  // Ctrl+클릭: 개별 칩 토글 선택
-  if (clickedChip && (e.ctrlKey || e.metaKey)) {
-    const nickname = clickedChip.dataset.nickname;
-    const timeIdx = clickedChip.dataset.timeIdx;
+  // 칩 클릭 (Ctrl 없이도 선택/토글)
+  if (clickedChip) {
+    const nickname = clickedChip.dataset.player;
+    const timeIdx = clickedChip.dataset.time;
     const key = `${nickname}|${timeIdx}`;
     
-    if (selectedChips.has(key)) {
-      selectedChips.delete(key);
-      clickedChip.classList.remove('selected');
+    if (e.ctrlKey || e.metaKey) {
+      // Ctrl+클릭: 토글
+      if (selectedChips.has(key)) {
+        selectedChips.delete(key);
+        clickedChip.classList.remove('selected');
+      } else {
+        selectedChips.add(key);
+        clickedChip.classList.add('selected');
+      }
+    } else if (clickedChip.classList.contains('selected') && selectedChips.size > 0) {
+      // 이미 선택된 칩 드래그 시작
+      isDragging = true;
+      const uniquePlayers = new Set();
+      selectedChips.forEach(k => uniquePlayers.add(k.split('|')[0]));
+      
+      const ghost = document.getElementById('drag-ghost');
+      ghost.textContent = `${uniquePlayers.size}명 이동`;
+      ghost.style.left = e.clientX + 10 + 'px';
+      ghost.style.top = e.clientY + 10 + 'px';
+      ghost.style.display = 'block';
     } else {
+      // 일반 클릭: 기존 선택 해제 + 새로 선택
+      selectedChips.forEach(k => {
+        const [n, t] = k.split('|');
+        document.querySelectorAll(`.player-chip[data-player="${n}"][data-time="${t}"]`).forEach(c => c.classList.remove('selected'));
+      });
+      selectedChips.clear();
       selectedChips.add(key);
       clickedChip.classList.add('selected');
     }
@@ -2837,26 +2862,8 @@ document.addEventListener('mousedown', (e) => {
     return;
   }
   
-  // 선택된 칩 위에서 드래그 시작 (이동용) - 먼저 체크
-  const chip = e.target.closest('.player-chip.selected');
-  if (chip && selectedChips.size > 0) {
-    isDragging = true;
-    
-    const uniquePlayers = new Set();
-    selectedChips.forEach(key => uniquePlayers.add(key.split('|')[0]));
-    
-    const ghost = document.getElementById('drag-ghost');
-    ghost.textContent = `${uniquePlayers.size}명 이동`;
-    ghost.style.left = e.clientX + 10 + 'px';
-    ghost.style.top = e.clientY + 10 + 'px';
-    ghost.style.display = 'block';
-    
-    e.preventDefault();
-    return;
-  }
-  
   // 빈 공간에서 드래그: 박스 선택
-  if (!isDragging && !e.target.closest('.player-chip')) {
+  if (!isDragging) {
     isSelecting = true;
     selectionStart = { x: e.clientX, y: e.clientY };
     
@@ -2871,7 +2878,7 @@ document.addEventListener('mousedown', (e) => {
   }
 });
 
-document.addEventListener('mousemove', (e) => {
+document.addEventListener('pointermove', (e) => {
   // 박스 선택 중
   if (isSelecting) {
     const box = document.getElementById('selection-box');
@@ -2904,7 +2911,7 @@ document.addEventListener('mousemove', (e) => {
   }
 });
 
-document.addEventListener('mouseup', (e) => {
+document.addEventListener('pointerup', (e) => {
   // 박스 선택 완료
   if (isSelecting) {
     isSelecting = false;
@@ -2954,7 +2961,7 @@ document.addEventListener('mouseup', (e) => {
       // 칩 위에 드롭 → 그 칩 앞에 삽입
       const targetChip = target.closest('.player-chip');
       if (targetChip) {
-        const targetName = targetChip.dataset.nickname;
+        const targetName = targetChip.dataset.player;
         const targetNem = targetChip.dataset.nem;
         
         if (targetName && targetNem) {
