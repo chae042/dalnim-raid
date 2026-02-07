@@ -2123,18 +2123,16 @@ function renderViewMode(container, players) {
   const assignLanes = (segs) => {
     if (segs.length === 0) return { segments: [], laneCount: 0 };
     
-    // 등장 순서대로 레인 할당 (중복 시간대 겹침 방지)
-    const lanes = []; // 각 레인의 종료 시간
+    // 닉네임 가나다순 고정 레인
+    const uniqueNames = [...new Set(segs.map(s => s.닉네임))].sort();
+    const nameLaneMap = {};
+    uniqueNames.forEach((name, idx) => nameLaneMap[name] = idx);
+    
     segs.forEach(seg => {
-      let assignedLane = -1;
-      for (let i = 0; i < lanes.length; i++) {
-        if (lanes[i] < seg.startIdx) { assignedLane = i; break; }
-      }
-      if (assignedLane === -1) { assignedLane = lanes.length; lanes.push(-1); }
-      seg.lane = assignedLane;
-      lanes[assignedLane] = seg.endIdx;
+      seg.lane = nameLaneMap[seg.닉네임];
     });
-    return { segments: segs, laneCount: lanes.length || 1 };
+    
+    return { segments: segs, laneCount: uniqueNames.length || 1 };
   };
   
   // 네임드별 레인 배치
@@ -2284,35 +2282,15 @@ function renderEditMode(container, players) {
   nemNames.forEach(nem => {
     const players = getUniquePlayersForNem(nem);
     
-    // 시작시간 순으로 정렬
-    const sorted = [...players].sort((a, b) => {
-      const aStart = TIME_ORDER.indexOf(a.시작시간);
-      const bStart = TIME_ORDER.indexOf(b.시작시간);
-      return aStart - bStart;
-    });
-    
-    // 겹침 방지 레인 할당 (보기 모드와 동일)
-    const lanes = []; // 각 레인의 종료 시간 인덱스
+    // 닉네임 가나다순 고정 레인
+    const sorted = [...players].sort((a, b) => a.닉네임.localeCompare(b.닉네임, 'ko'));
     const laneMap = {};
-    
-    sorted.forEach(p => {
-      const startIdx = TIME_ORDER.indexOf(p.시작시간);
-      const endIdx = TIME_ORDER.indexOf(p.종료시간);
-      
-      let assignedLane = -1;
-      for (let i = 0; i < lanes.length; i++) {
-        if (lanes[i] < startIdx) { assignedLane = i; break; }
-      }
-      if (assignedLane === -1) { assignedLane = lanes.length; lanes.push(-1); }
-      
-      laneMap[p.닉네임] = assignedLane;
-      lanes[assignedLane] = endIdx;
-    });
+    sorted.forEach((p, idx) => laneMap[p.닉네임] = idx);
     
     nemData[nem] = {
       players,
       laneMap,
-      laneCount: lanes.length || 1
+      laneCount: sorted.length || 1
     };
   });
   
