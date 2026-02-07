@@ -67,7 +67,7 @@
     color: #888;
   }
 
-  /* Main Tabs (등록/일정보기) */
+  /* Main Tabs */
   .main-tabs {
     display: flex;
     gap: 4px;
@@ -268,7 +268,7 @@
     font-weight: 700;
   }
 
-  /* View Mode Toggle */
+  /* Mode Toggle */
   .mode-toggle {
     display: flex;
     gap: 8px;
@@ -367,22 +367,21 @@
   .schedule-table th.total { color: #ffd700; }
 
   .schedule-table td {
-    padding: 14px 12px;
+    padding: 10px 8px;
     border-bottom: 1px solid #2a2a4a;
-    vertical-align: middle;
+    vertical-align: top;
   }
 
   .time-cell {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #666;
     text-align: center;
-    width: 100px;
+    width: 80px;
   }
 
   .players-cell {
-    min-width: 200px;
-    vertical-align: middle;
+    min-width: 180px;
   }
 
   .players-wrap {
@@ -394,19 +393,19 @@
   .total-cell {
     text-align: center;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 16px;
     color: #888;
-    width: 80px;
+    width: 60px;
   }
 
-  /* Player Chip (편집 모드) */
+  /* Player Chip */
   .player-chip {
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
     transition: all 0.15s;
@@ -429,43 +428,24 @@
     filter: grayscale(100%);
   }
 
-  /* Player Block (보기 모드 - 병합 셀용) */
+  /* Player Block (보기모드) */
   .player-block {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 10px 14px;
+    gap: 4px;
+    padding: 8px 12px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
-    text-align: center;
-    height: 100%;
-    min-height: 40px;
-  }
-
-  .player-block .job-icon {
-    font-size: 12px;
+    margin: 2px;
+    border: 1px solid transparent;
   }
 
   .player-block .time-range {
     font-size: 11px;
     opacity: 0.7;
-    display: block;
-    margin-top: 2px;
-  }
-
-  /* 병합 셀 스타일 */
-  .merged-cell {
-    padding: 4px !important;
-    vertical-align: middle;
-  }
-
-  .merged-cell .player-block {
-    height: 100%;
-    flex-direction: column;
-    justify-content: center;
+    margin-left: 4px;
   }
 
   /* Job Colors */
@@ -748,7 +728,7 @@
 const WEBHOOK_URL = 'https://n8n-production-f0a7.up.railway.app/webhook/raid';
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIME_ORDER = ['PM 6', 'PM 7', 'PM 8', 'PM 9', 'PM 10', 'PM 11', 'AM 12', 'AM 1', 'AM 2'];
-const TIME_LABELS = ['18시', '19시', '20시', '21시', '22시', '23시', '익일 00시', '익일 01시', '익일 02시'];
+const TIME_LABELS = ['18시', '19시', '20시', '21시', '22시', '23시', '익일00시', '익일01시', '익일02시'];
 
 const JOB_MAP = {
   '수호성': { class: 'job-tank', icon: '🛡' },
@@ -764,7 +744,7 @@ const JOB_MAP = {
 let allPlayers = [];
 let currentDay = '금';
 let currentRaidType = '트라이팟';
-let currentMode = 'view'; // 'view' or 'edit'
+let currentMode = 'view';
 
 // 메인 탭 전환
 function showMainTab(tabName) {
@@ -788,9 +768,10 @@ function selectRaidType(type) {
   });
   renderDayTabs();
   renderSchedule();
+  renderNotes();
 }
 
-// 보기/편집 모드 변경
+// 모드 변경
 function setMode(mode) {
   currentMode = mode;
   document.querySelectorAll('.mode-toggle-btn').forEach((btn, idx) => {
@@ -808,18 +789,18 @@ function selectDay(day) {
   renderSchedule();
 }
 
-// 직업 정보 가져오기
+// 직업 정보
 function getJobInfo(job) {
   return JOB_MAP[job] || { class: 'job-support', icon: '●' };
 }
 
-// 시간 인덱스 가져오기
+// 시간 인덱스
 function getTimeIndex(timeStr) {
   if (!timeStr || timeStr === '상관없음') return -1;
   return TIME_ORDER.indexOf(timeStr);
 }
 
-// 시간 범위 계산
+// 시간 범위
 function getTimeRange(startTime, endTime) {
   let startIdx = getTimeIndex(startTime);
   let endIdx = getTimeIndex(endTime);
@@ -915,38 +896,52 @@ function renderSchedule() {
   }
 }
 
-// 보기 모드 렌더링 (블록 병합)
+// 보기 모드 - 시작 시간에만 블록 표시 (시간 범위 포함)
 function renderViewMode(container, nem1, nem2) {
-  // 각 플레이어의 시간 범위 정보 추가
+  // 각 플레이어에 시간 정보 추가
   const addTimeInfo = (players) => {
     return players.map(p => {
       const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
-      return { ...p, startIdx, endIdx, rowspan: endIdx - startIdx + 1 };
-    }).sort((a, b) => a.startIdx - b.startIdx); // 시작 시간 순 정렬
+      return { ...p, startIdx, endIdx };
+    });
   };
   
   const nem1WithTime = addTimeInfo(nem1);
   const nem2WithTime = addTimeInfo(nem2);
   
-  // 각 시간대별로 어떤 셀을 렌더링할지 계산
-  const nem1Cells = calculateMergedCells(nem1WithTime);
-  const nem2Cells = calculateMergedCells(nem2WithTime);
+  // 특정 시간에 시작하는 플레이어들
+  const getPlayersStartingAt = (players, timeIdx) => {
+    return players.filter(p => p.startIdx === timeIdx);
+  };
   
-  // 시간별 총 인원 계산
-  const getCountAtTime = (players, timeIdx) => {
+  // 특정 시간에 활동 중인 플레이어 수 (합계용)
+  const getActiveCount = (players, timeIdx) => {
     return players.filter(p => timeIdx >= p.startIdx && timeIdx <= p.endIdx).length;
   };
   
+  const renderPlayerBlocks = (players) => {
+    if (players.length === 0) return '<span class="empty-cell">-</span>';
+    return `<div class="players-wrap">${players.map(p => {
+      const jobInfo = getJobInfo(p.직업);
+      const timeRange = `${TIME_LABELS[p.startIdx]}~${TIME_LABELS[p.endIdx]}`;
+      return `<div class="player-block ${jobInfo.class}" title="${p.참고사항 || ''}">
+        <span class="job-icon">${jobInfo.icon}</span>
+        <span>${p.닉네임}</span>
+        <span class="time-range">${timeRange}</span>
+      </div>`;
+    }).join('')}</div>`;
+  };
+  
   const rows = TIME_ORDER.map((time, idx) => {
-    const nem1Cell = nem1Cells[idx];
-    const nem2Cell = nem2Cells[idx];
-    const total = getCountAtTime(nem1WithTime, idx) + getCountAtTime(nem2WithTime, idx);
+    const nem1Starting = getPlayersStartingAt(nem1WithTime, idx);
+    const nem2Starting = getPlayersStartingAt(nem2WithTime, idx);
+    const total = getActiveCount(nem1WithTime, idx) + getActiveCount(nem2WithTime, idx);
     
     return `
       <tr>
         <td class="time-cell">${TIME_LABELS[idx]}</td>
-        ${nem1Cell}
-        ${nem2Cell}
+        <td class="players-cell">${renderPlayerBlocks(nem1Starting)}</td>
+        <td class="players-cell">${renderPlayerBlocks(nem2Starting)}</td>
         <td class="total-cell">${total}명</td>
       </tr>
     `;
@@ -969,104 +964,7 @@ function renderViewMode(container, nem1, nem2) {
   `;
 }
 
-// 병합 셀 계산
-function calculateMergedCells(players) {
-  const cells = {};
-  const occupied = {}; // 각 시간대별 사용된 열 추적
-  
-  // 초기화
-  for (let i = 0; i < TIME_ORDER.length; i++) {
-    occupied[i] = [];
-  }
-  
-  // 각 플레이어를 열에 배치
-  players.forEach(player => {
-    const { startIdx, endIdx, rowspan } = player;
-    
-    // 사용 가능한 열 찾기
-    let col = 0;
-    let found = false;
-    while (!found) {
-      let available = true;
-      for (let t = startIdx; t <= endIdx; t++) {
-        if (occupied[t].includes(col)) {
-          available = false;
-          break;
-        }
-      }
-      if (available) {
-        found = true;
-        // 이 열을 점유
-        for (let t = startIdx; t <= endIdx; t++) {
-          occupied[t].push(col);
-        }
-        player.col = col;
-      } else {
-        col++;
-      }
-    }
-  });
-  
-  // 최대 열 수 계산
-  const maxCols = Math.max(...Object.values(occupied).map(arr => arr.length), 1);
-  
-  // 각 시간대별 셀 생성
-  for (let timeIdx = 0; timeIdx < TIME_ORDER.length; timeIdx++) {
-    const playersStartingHere = players.filter(p => p.startIdx === timeIdx);
-    const playersOccupying = players.filter(p => timeIdx > p.startIdx && timeIdx <= p.endIdx);
-    
-    if (playersStartingHere.length === 0 && playersOccupying.length === 0) {
-      // 빈 셀
-      cells[timeIdx] = `<td class="players-cell"><span class="empty-cell">-</span></td>`;
-    } else {
-      // 셀 내용 생성
-      let cellContent = '';
-      let hasNewBlock = false;
-      
-      playersStartingHere.forEach(p => {
-        const jobInfo = getJobInfo(p.직업);
-        const timeRange = `${TIME_LABELS[p.startIdx]}~${TIME_LABELS[p.endIdx]}`;
-        hasNewBlock = true;
-        
-        if (p.rowspan > 1) {
-          // rowspan 사용
-          cellContent += `
-            <td class="players-cell merged-cell" rowspan="${p.rowspan}">
-              <div class="player-block ${jobInfo.class}" title="${p.참고사항 || ''}">
-                <span class="job-icon">${jobInfo.icon}</span>
-                <span>${p.닉네임}</span>
-                <span class="time-range">${timeRange}</span>
-              </div>
-            </td>
-          `;
-        } else {
-          // 단일 셀
-          cellContent += `
-            <td class="players-cell">
-              <div class="player-block ${jobInfo.class}" title="${p.참고사항 || ''}">
-                <span class="job-icon">${jobInfo.icon}</span>
-                <span>${p.닉네임}</span>
-              </div>
-            </td>
-          `;
-        }
-      });
-      
-      // rowspan으로 점유된 셀이면 아무것도 출력 안함
-      if (playersStartingHere.length === 0 && playersOccupying.length > 0) {
-        cells[timeIdx] = ''; // rowspan이 차지하고 있음
-      } else if (playersStartingHere.length === 0) {
-        cells[timeIdx] = `<td class="players-cell"><span class="empty-cell">-</span></td>`;
-      } else {
-        cells[timeIdx] = cellContent;
-      }
-    }
-  }
-  
-  return cells;
-}
-
-// 편집 모드 렌더링 (시간별 반복)
+// 편집 모드 - 각 시간마다 반복 표시
 function renderEditMode(container, nem1, nem2) {
   const getPlayersAtTime = (players, timeIdx) => {
     return players.filter(p => {
@@ -1119,10 +1017,10 @@ function renderEditMode(container, nem1, nem2) {
   `;
 }
 
-// 참고사항 렌더링
+// 참고사항 렌더링 - 참고사항 있는 사람만!
 function renderNotes() {
   const notes = allPlayers
-    .filter(p => p.참고사항 && p.레이드종류 === currentRaidType)
+    .filter(p => p.참고사항 && p.참고사항.trim() !== '' && p.레이드종류 === currentRaidType)
     .map(p => ({ name: p.닉네임, note: p.참고사항 }));
   
   const container = document.getElementById('notes-section');
@@ -1139,16 +1037,14 @@ function renderNotes() {
   }
 }
 
-// === 등록 폼 관련 ===
+// === 등록 폼 ===
 
-// 요일 버튼 토글
 document.querySelectorAll('.day-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     btn.classList.toggle('selected');
   });
 });
 
-// 선택된 못하는 요일 가져오기
 function getSelectedDays() {
   const days = [];
   document.querySelectorAll('.day-btn.selected').forEach(btn => {
@@ -1157,14 +1053,13 @@ function getSelectedDays() {
   return days;
 }
 
-// 메시지 표시
 function showMessage(elementId, type, text) {
   const el = document.getElementById(elementId);
   el.innerHTML = `<div class="message ${type}">${text}</div>`;
   setTimeout(() => { el.innerHTML = ''; }, 5000);
 }
 
-// 내 정보 불러오기
+// 내 정보 불러오기 - 수정됨
 async function loadMyInfo() {
   const nickname = document.getElementById('nickname').value.trim();
   if (!nickname) {
@@ -1172,16 +1067,24 @@ async function loadMyInfo() {
     return;
   }
 
+  const btn = document.querySelector('.search-btn');
+  btn.disabled = true;
+  btn.textContent = '검색 중...';
+
   try {
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'get', data: { 닉네임: nickname } })
+      body: JSON.stringify({ action: 'get', data: { '닉네임': nickname } })
     });
     const result = await response.json();
     
+    console.log('불러오기 결과:', result); // 디버깅용
+    
     if (result.success && result.data) {
       const d = result.data;
+      
+      // 폼 필드 채우기
       document.getElementById('job').value = d.직업 || '';
       document.getElementById('named').value = d.네임드 || '';
       document.getElementById('startTime').value = d.시작시간 || '상관없음';
@@ -1189,23 +1092,31 @@ async function loadMyInfo() {
       document.getElementById('raidType').value = d.레이드종류 || '트라이팟';
       document.getElementById('note').value = d.참고사항 || '';
       
+      // 못하는 요일 설정
       document.querySelectorAll('.day-btn').forEach(btn => {
         btn.classList.remove('selected');
-        if (d.못하는요일 && d.못하는요일.includes(btn.dataset.day)) {
-          btn.classList.add('selected');
-        }
       });
       
-      showMessage('register-message', 'success', '정보를 불러왔습니다');
+      if (d.못하는요일 && Array.isArray(d.못하는요일)) {
+        d.못하는요일.forEach(day => {
+          const btn = document.querySelector(`.day-btn[data-day="${day}"]`);
+          if (btn) btn.classList.add('selected');
+        });
+      }
+      
+      showMessage('register-message', 'success', `${nickname}님 정보를 불러왔습니다`);
     } else {
       showMessage('register-message', 'info', '등록된 정보가 없습니다. 새로 등록해주세요.');
     }
   } catch (error) {
+    console.error('불러오기 에러:', error);
     showMessage('register-message', 'error', '불러오기 실패: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '불러오기';
   }
 }
 
-// 폼 제출
 async function submitForm() {
   const nickname = document.getElementById('nickname').value.trim();
   const job = document.getElementById('job').value;
@@ -1220,14 +1131,14 @@ async function submitForm() {
   }
 
   const data = {
-    닉네임: nickname,
-    직업: job,
-    네임드: document.getElementById('named').value || '',
-    시작시간: document.getElementById('startTime').value,
-    종료시간: document.getElementById('endTime').value,
-    못하는요일: getSelectedDays(),
-    레이드종류: document.getElementById('raidType').value,
-    참고사항: document.getElementById('note').value || ''
+    '닉네임': nickname,
+    '직업': job,
+    '네임드': document.getElementById('named').value || '',
+    '시작시간': document.getElementById('startTime').value,
+    '종료시간': document.getElementById('endTime').value,
+    '못하는요일': getSelectedDays(),
+    '레이드종류': document.getElementById('raidType').value,
+    '참고사항': document.getElementById('note').value || ''
   };
 
   const btn = document.querySelector('.submit-btn');
