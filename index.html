@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=800, initial-scale=0.5, user-scalable=yes">
 <title>🌙 달님봇 - 파티 일정</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
@@ -384,8 +384,8 @@
 
   .schedule-table th {
     background: #16213e;
-    padding: 12px 8px;
-    font-size: 15px;
+    padding: 16px 12px;
+    font-size: 18px;
     font-weight: 700;
     border-bottom: 2px solid #2a2a4a;
   }
@@ -401,12 +401,11 @@
   }
 
   .time-cell {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     color: #666;
     text-align: center;
-    width: 55px;
-    min-width: 55px;
+    width: 80px;
   }
 
   .players-cell {
@@ -422,10 +421,9 @@
   .total-cell {
     text-align: center;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 16px;
     color: #888;
-    width: 45px;
-    min-width: 45px;
+    width: 60px;
   }
 
   .total-cell.highlight {
@@ -439,8 +437,7 @@
   }
 
   .timeline-table .time-header {
-    width: 55px;
-    min-width: 55px;
+    width: 70px;
   }
 
   .timeline-table .nem1-block-cell,
@@ -484,16 +481,6 @@
   .timeline-block .job-icon {
     font-size: 10px;
     opacity: 0.8;
-  }
-
-  /* 컴팩트 모드 (좁은 화면) */
-  .timeline-block.compact {
-    font-size: 11px;
-  }
-
-  .timeline-block.compact .job-icon {
-    font-size: 12px;
-    opacity: 1;
   }
 
   /* 타임라인 블록 직업 색상 */
@@ -991,96 +978,11 @@
     width: 100%;
   }
 
-  /* 모바일 반응형 - 표 외부만 조절 */
-  @media (max-width: 768px) {
-    .container {
-      padding: 12px;
-    }
-
-    .header h1 {
-      font-size: 18px;
-    }
-
-    .header h2 {
-      font-size: 20px;
-    }
-
-    .day-tabs {
-      justify-content: flex-start;
-      flex-wrap: nowrap;
-    }
-
-    .day-tab {
-      padding: 8px 12px;
-      font-size: 13px;
-      flex-shrink: 0;
-    }
-
-    .raid-tabs-container {
-      flex-wrap: wrap;
-    }
-
-    .raid-tab {
-      padding: 8px 16px;
-      font-size: 13px;
-    }
-
-    .legend {
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .legend-item {
-      font-size: 11px;
-    }
-
-    .floating-btn {
-      width: 48px;
-      height: 48px;
-      font-size: 20px;
-      bottom: 16px;
-      right: 16px;
-    }
-
-    /* 모바일에서 편집모드 숨김 */
-    .edit-mode-bar {
-      display: none;
-    }
-
-    .move-controls {
-      display: none;
-    }
-
-    .edit-hint {
-      display: none !important;
-    }
-  }
-
-  /* 더 작은 화면 */
-  @media (max-width: 480px) {
-    .header h2 {
-      font-size: 18px;
-    }
-
-    .subtitle {
-      font-size: 11px;
-    }
-
-    .day-tab {
-      padding: 6px 10px;
-      font-size: 12px;
-    }
-
-    .raid-tab {
-      padding: 6px 12px;
-      font-size: 12px;
-    }
-
-    .raid-control-btn {
-      width: 28px;
-      height: 28px;
-      font-size: 12px;
-    }
+  /* 모바일에서 편집모드 숨김 (JS로 .is-mobile 클래스 추가) */
+  .is-mobile .edit-mode-bar,
+  .is-mobile .move-controls,
+  .is-mobile .edit-hint {
+    display: none !important;
   }
 </style>
 </head>
@@ -1639,7 +1541,7 @@ function renderViewMode(container, players) {
   };
   
   // 블록 렌더링
-  const renderBlocks = (laneData, laneWidth, isCompact) => {
+  const renderBlocks = (laneData, laneWidth) => {
     if (laneData.segments.length === 0) return '';
     return laneData.segments.map(s => {
       const jobInfo = getJobInfo(s.직업);
@@ -1647,10 +1549,9 @@ function renderViewMode(container, players) {
       const height = (s.endIdx - s.startIdx + 1) * ROW_HEIGHT - 4;
       const left = s.lane * laneWidth + 2;
       const width = laneWidth - 4;
-      const displayName = isCompact ? '' : s.닉네임;
       const tooltip = s.닉네임 + (s.참고사항 ? ' - ' + s.참고사항 : '');
-      return `<div class="timeline-block ${jobInfo.class} ${isCompact ? 'compact' : ''}" style="top:${top}px; height:${height}px; left:${left}px; width:${width}px;" title="${tooltip}">
-        <span class="job-icon">${jobInfo.icon}</span>${displayName}
+      return `<div class="timeline-block ${jobInfo.class}" style="top:${top}px; height:${height}px; left:${left}px; width:${width}px;" title="${tooltip}">
+        <span class="job-icon">${jobInfo.icon}</span>${s.닉네임}
       </div>`;
     }).join('');
   };
@@ -1668,19 +1569,7 @@ function renderViewMode(container, players) {
     </tr>`;
   }).join('');
   
-  // 동적 레인 너비 계산
-  const containerWidth = container.clientWidth || window.innerWidth - 40;
-  const fixedWidth = 55 + 45 + 20; // 시간열 + 합계열 + 여백
-  const availableWidth = containerWidth - fixedWidth;
-  const totalLanes = Math.max(nem1Lanes.laneCount, 1) + Math.max(nem2Lanes.laneCount, 1);
-  
-  // 레인 너비 계산 (최소 30px, 최대 80px)
-  let laneWidth = Math.floor(availableWidth / totalLanes);
-  laneWidth = Math.max(30, Math.min(80, laneWidth));
-  
-  // 40px 이하면 컴팩트 모드 (아이콘만)
-  const isCompact = laneWidth <= 45;
-  
+  const laneWidth = 80;
   const nem1Width = Math.max(nem1Lanes.laneCount, 1) * laneWidth;
   const nem2Width = Math.max(nem2Lanes.laneCount, 1) * laneWidth;
   const totalHeight = TIME_ORDER.length * ROW_HEIGHT;
@@ -1704,10 +1593,10 @@ function renderViewMode(container, players) {
   const nem1Cell = firstRow.querySelector('.nem1-block-cell');
   const nem2Cell = firstRow.querySelector('.nem2-block-cell');
   
-  nem1Cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nem1Lanes, laneWidth, isCompact)}</div>`;
+  nem1Cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nem1Lanes, laneWidth)}</div>`;
   nem1Cell.setAttribute('rowspan', TIME_ORDER.length);
   
-  nem2Cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nem2Lanes, laneWidth, isCompact)}</div>`;
+  nem2Cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nem2Lanes, laneWidth)}</div>`;
   nem2Cell.setAttribute('rowspan', TIME_ORDER.length);
   
   // 나머지 행의 블록 셀 제거
@@ -2504,6 +2393,19 @@ async function deleteRaid() {
     alert('삭제 실패: ' + error.message);
   }
 }
+
+// 모바일 감지
+function detectMobile() {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+    || window.innerWidth < 800;
+  if (isMobile) {
+    document.body.classList.add('is-mobile');
+  } else {
+    document.body.classList.remove('is-mobile');
+  }
+}
+detectMobile();
+window.addEventListener('resize', detectMobile);
 
 // 초기 로드
 initViewPanel();
