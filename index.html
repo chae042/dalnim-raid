@@ -1092,12 +1092,62 @@
     display: none !important;
   }
 
+  /* 모바일 모달 최적화 */
+  .is-mobile .modal {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+    padding: 16px;
+    margin: 10px;
+  }
+
+  .is-mobile .modal-title {
+    font-size: 16px;
+  }
+
+  .is-mobile .modal-body label {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .is-mobile .modal-body input,
+  .is-mobile .modal-body select {
+    padding: 14px 12px;
+    font-size: 16px; /* iOS 줌 방지 */
+    -webkit-appearance: none;
+    border-radius: 8px;
+  }
+
+  .is-mobile .modal-body .form-group {
+    margin-bottom: 14px;
+  }
+
+  .is-mobile .day-selector {
+    gap: 6px;
+  }
+
+  .is-mobile .day-btn {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .is-mobile .modal-btn {
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  .is-mobile .search-btn,
+  .is-mobile .submit-btn {
+    padding: 14px;
+    font-size: 15px;
+  }
+
   /* 토스트 알림 */
   #toast-container {
     position: fixed;
-    top: 20px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     z-index: 10000;
     display: flex;
     flex-direction: column;
@@ -1106,13 +1156,13 @@
   }
 
   .toast {
-    background: #1a1a2e;
+    background: rgba(26, 26, 46, 0.95);
     border: 1px solid #ffd700;
     border-radius: 12px;
-    padding: 14px 20px;
+    padding: 16px 24px;
     color: #fff;
-    font-size: 14px;
-    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
+    font-size: 15px;
+    box-shadow: 0 4px 30px rgba(255, 215, 0, 0.3);
     animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
     pointer-events: auto;
     max-width: 320px;
@@ -1121,22 +1171,22 @@
 
   .toast.success {
     border-color: #4ade80;
-    box-shadow: 0 4px 20px rgba(74, 222, 128, 0.2);
+    box-shadow: 0 4px 30px rgba(74, 222, 128, 0.3);
   }
 
   .toast.error {
     border-color: #f87171;
-    box-shadow: 0 4px 20px rgba(248, 113, 113, 0.2);
+    box-shadow: 0 4px 30px rgba(248, 113, 113, 0.3);
   }
 
   @keyframes toastIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
   }
 
   @keyframes toastOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-20px); }
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.9); }
   }
 
   /* 커스텀 확인 모달 */
@@ -1290,7 +1340,7 @@
     <div id="notes-section"></div>
 
     <div class="footer">
-      🌙 달님이 · <span id="update-time"></span>
+      🌙 달님봇 · <span id="update-time"></span>
     </div>
   </div>
 
