@@ -348,123 +348,111 @@
   }
 
   /* ============================================
-     블록 모드 테이블 스타일
+     보기모드 블록 스타일 (편집모드 칩 기반 + 세로 확장)
      ============================================ */
-  .schedule-table.block-mode {
-    border-collapse: collapse;
+  .player-chip-block {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    cursor: default;
   }
-  
-  .schedule-table.block-mode .time-header {
-    width: 60px;
-  }
-  
-  .schedule-table.block-mode .divider-header,
-  .schedule-table.block-mode .divider-cell {
-    width: 2px;
-    background: #2a2a4a;
-    padding: 0;
-  }
-  
-  .player-block-cell {
-    padding: 6px !important;
-    vertical-align: top;
-    border: 2px solid transparent;
-    border-radius: 6px;
-    min-width: 80px;
-    transition: filter 0.15s;
-  }
-  
-  .player-block-cell:hover {
+
+  .player-chip-block:hover {
+    transform: translateY(-1px);
     filter: brightness(1.2);
   }
-  
-  .player-block-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-  
-  .player-block-content .name {
-    font-size: 13px;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  
-  .player-block-content .job-icon {
+
+  .player-chip-block .job-icon {
     font-size: 10px;
-    margin-right: 3px;
+    opacity: 0.8;
   }
-  
-  .player-block-content .time-info {
+
+  .player-chip-block .time-range {
     font-size: 10px;
     opacity: 0.7;
-    margin-top: 2px;
+  }
+
+  .player-chip-block.no-time {
+    opacity: 0.4;
+    filter: grayscale(100%);
   }
   
-  .player-block-content .note-indicator {
-    font-size: 10px;
-    margin-top: auto;
+  /* 진행 중인 블록 placeholder (빈 공간 유지용) */
+  .player-chip-ongoing {
+    display: inline-block;
+    width: 70px;
+    height: 24px;
+    border-radius: 5px;
+    opacity: 0.3;
   }
-  
-  .empty-block-cell {
-    min-width: 80px;
-    background: transparent;
-  }
-  
+
   /* 블록 직업 색상 */
-  .player-block-cell.job-tank {
-    background: rgba(59, 130, 246, 0.3);
-    border-color: rgba(59, 130, 246, 0.5);
-    color: #93c5fd;
+  .player-chip-block.job-tank {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
+  }
+
+  .player-chip-block.job-melee {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
+  }
+
+  .player-chip-block.job-ranged {
+    background: rgba(249, 115, 22, 0.2);
+    border-color: rgba(249, 115, 22, 0.4);
+    color: #fb923c;
+  }
+
+  .player-chip-block.job-magic {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: #c084fc;
+  }
+
+  .player-chip-block.job-assassin {
+    background: rgba(236, 72, 153, 0.2);
+    border-color: rgba(236, 72, 153, 0.4);
+    color: #ec4899;
+  }
+
+  .player-chip-block.job-summoner {
+    background: rgba(20, 184, 166, 0.2);
+    border-color: rgba(20, 184, 166, 0.4);
+    color: #14b8a6;
+  }
+
+  .player-chip-block.job-healer {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #4ade80;
+  }
+
+  .player-chip-block.job-support {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: rgba(234, 179, 8, 0.4);
+    color: #facc15;
   }
   
-  .player-block-cell.job-melee {
-    background: rgba(239, 68, 68, 0.3);
-    border-color: rgba(239, 68, 68, 0.5);
-    color: #fca5a5;
-  }
-  
-  .player-block-cell.job-ranged {
-    background: rgba(249, 115, 22, 0.3);
-    border-color: rgba(249, 115, 22, 0.5);
-    color: #fdba74;
-  }
-  
-  .player-block-cell.job-magic {
-    background: rgba(168, 85, 247, 0.3);
-    border-color: rgba(168, 85, 247, 0.5);
-    color: #d8b4fe;
-  }
-  
-  .player-block-cell.job-assassin {
-    background: rgba(236, 72, 153, 0.3);
-    border-color: rgba(236, 72, 153, 0.5);
-    color: #f9a8d4;
-  }
-  
-  .player-block-cell.job-summoner {
-    background: rgba(20, 184, 166, 0.3);
-    border-color: rgba(20, 184, 166, 0.5);
-    color: #5eead4;
-  }
-  
-  .player-block-cell.job-healer {
-    background: rgba(34, 197, 94, 0.3);
-    border-color: rgba(34, 197, 94, 0.5);
-    color: #86efac;
-  }
-  
-  .player-block-cell.job-support {
-    background: rgba(234, 179, 8, 0.3);
-    border-color: rgba(234, 179, 8, 0.5);
-    color: #fde047;
-  }
-  
-  .player-block-cell.full-time {
-    opacity: 0.6;
-    border-style: dashed;
-  }
-  
+  /* 진행중 placeholder 색상 */
+  .player-chip-ongoing.job-tank { background: rgba(59, 130, 246, 0.15); }
+  .player-chip-ongoing.job-melee { background: rgba(239, 68, 68, 0.15); }
+  .player-chip-ongoing.job-ranged { background: rgba(249, 115, 22, 0.15); }
+  .player-chip-ongoing.job-magic { background: rgba(168, 85, 247, 0.15); }
+  .player-chip-ongoing.job-assassin { background: rgba(236, 72, 153, 0.15); }
+  .player-chip-ongoing.job-summoner { background: rgba(20, 184, 166, 0.15); }
+  .player-chip-ongoing.job-healer { background: rgba(34, 197, 94, 0.15); }
+  .player-chip-ongoing.job-support { background: rgba(234, 179, 8, 0.15); }
+
   .total-cell-table.highlight {
     color: #ffd700;
     background: rgba(255, 215, 0, 0.1);
@@ -1015,7 +1003,7 @@ function renderSchedule() {
 }
 
 // ============================================
-// 보기 모드 - rowspan 블록 형태
+// 보기 모드 - 편집모드 UI + rowspan 블록
 // ============================================
 function renderTimelineView(container, nem1, nem2) {
   // 플레이어에 시간 정보 추가
@@ -1035,99 +1023,50 @@ function renderTimelineView(container, nem1, nem2) {
     return players.filter(p => timeIdx >= p.startIdx && timeIdx <= p.endIdx).length;
   };
   
-  // 레인 배치 (겹침 처리)
-  const assignLanes = (players) => {
-    if (players.length === 0) return [];
-    
-    const sorted = [...players].sort((a, b) => a.startIdx - b.startIdx);
-    const lanes = [];
-    
-    sorted.forEach(player => {
-      let assignedLane = -1;
-      for (let i = 0; i < lanes.length; i++) {
-        if (lanes[i] < player.startIdx) {
-          assignedLane = i;
-          break;
-        }
-      }
-      
-      if (assignedLane === -1) {
-        assignedLane = lanes.length;
-        lanes.push(-1);
-      }
-      
-      player.lane = assignedLane;
-      lanes[assignedLane] = player.endIdx;
-    });
-    
-    return { players: sorted, laneCount: lanes.length || 1 };
+  // 특정 시간에 "시작"하는 플레이어들
+  const getPlayersStartingAt = (players, timeIdx) => {
+    return players.filter(p => p.startIdx === timeIdx);
   };
   
-  const nem1Lanes = assignLanes(nem1Processed);
-  const nem2Lanes = assignLanes(nem2Processed);
-  
-  // 특정 시간에 "시작"하는 플레이어들 (레인별로 그룹화)
-  const getPlayersStartingAt = (laneData, timeIdx) => {
-    if (!laneData.players) return [];
-    return laneData.players.filter(p => p.startIdx === timeIdx);
+  // 특정 시간에 "진행 중"인 플레이어들 (시작 시간 제외)
+  const getPlayersOngoing = (players, timeIdx) => {
+    return players.filter(p => timeIdx > p.startIdx && timeIdx <= p.endIdx);
   };
   
-  // 특정 시간에 "진행 중"인 플레이어의 레인 (빈 셀 처리용)
-  const getOccupiedLanes = (laneData, timeIdx) => {
-    if (!laneData.players) return new Set();
-    const occupied = new Set();
-    laneData.players.forEach(p => {
-      if (timeIdx > p.startIdx && timeIdx <= p.endIdx) {
-        occupied.add(p.lane);
-      }
-    });
-    return occupied;
-  };
-  
-  // 플레이어 블록 렌더링
+  // 플레이어 블록 렌더링 (rowspan 적용)
   const renderPlayerBlock = (player) => {
     const jobInfo = getJobInfo(player.직업);
     const rowspan = player.endIdx - player.startIdx + 1;
     const timeRange = `${TIME_LABELS[player.startIdx]}~${TIME_LABELS[player.endIdx]}`;
-    const fullTimeClass = player.isFullTime ? 'full-time' : '';
-    const noteIndicator = player.참고사항 ? '📌' : '';
+    const fullTimeClass = player.isFullTime ? 'no-time' : '';
     
-    return `
-      <td class="player-block-cell ${jobInfo.class} ${fullTimeClass}" rowspan="${rowspan}" title="${player.참고사항 || ''}">
-        <div class="player-block-content">
-          <span class="job-icon">${jobInfo.icon}</span>
-          <span class="name">${player.닉네임}</span>
-          <span class="time-info">${timeRange}</span>
-          ${noteIndicator ? `<span class="note-indicator">${noteIndicator}</span>` : ''}
-        </div>
-      </td>
-    `;
+    return `<span class="player-chip-block ${jobInfo.class} ${fullTimeClass}" data-rowspan="${rowspan}" title="${player.참고사항 || ''}">
+      <span class="job-icon">${jobInfo.icon}</span>${player.닉네임}
+      <span class="time-range">${timeRange}</span>
+    </span>`;
   };
   
-  // 네임드 컬럼의 셀들 생성
-  const renderNamedCells = (laneData, timeIdx) => {
-    const starting = getPlayersStartingAt(laneData, timeIdx);
-    const occupied = getOccupiedLanes(laneData, timeIdx);
+  // 네임드 컬럼 렌더링 (시작하는 블록 + 진행중인 블록 placeholder)
+  const renderNamedCell = (players, timeIdx) => {
+    const starting = getPlayersStartingAt(players, timeIdx);
+    const ongoing = getPlayersOngoing(players, timeIdx);
     
-    if (laneData.laneCount === 0) {
-      return '<td class="empty-block-cell">-</td>';
+    if (starting.length === 0 && ongoing.length === 0) {
+      return '<td class="players-cell"><span class="empty-cell">-</span></td>';
     }
     
-    let cells = '';
-    for (let lane = 0; lane < laneData.laneCount; lane++) {
-      const player = starting.find(p => p.lane === lane);
-      if (player) {
-        cells += renderPlayerBlock(player);
-      } else if (!occupied.has(lane)) {
-        cells += '<td class="empty-block-cell"></td>';
-      }
-      // occupied인 경우는 rowspan으로 이미 차지하고 있으므로 아무것도 안 넣음
-    }
+    // 시작하는 블록들
+    const startingBlocks = starting.map(p => renderPlayerBlock(p)).join('');
     
-    return cells;
+    // 진행 중인 블록들 (placeholder로 공간 유지)
+    const ongoingPlaceholders = ongoing.map(p => {
+      const jobInfo = getJobInfo(p.직업);
+      return `<span class="player-chip-ongoing ${jobInfo.class}"></span>`;
+    }).join('');
+    
+    return `<td class="players-cell"><div class="players-wrap">${startingBlocks}${ongoingPlaceholders}</div></td>`;
   };
   
-  // 테이블 행 생성
   const rows = TIME_ORDER.map((time, idx) => {
     const total = getActiveCount(nem1Processed, idx) + getActiveCount(nem2Processed, idx);
     const highlightClass = total >= 8 ? 'highlight' : '';
@@ -1135,26 +1074,20 @@ function renderTimelineView(container, nem1, nem2) {
     return `
       <tr>
         <td class="time-cell">${TIME_LABELS[idx]}</td>
-        ${renderNamedCells(nem1Lanes, idx)}
-        <td class="divider-cell"></td>
-        ${renderNamedCells(nem2Lanes, idx)}
+        ${renderNamedCell(nem1Processed, idx)}
+        ${renderNamedCell(nem2Processed, idx)}
         <td class="total-cell-table ${highlightClass}">${total}명</td>
       </tr>
     `;
   }).join('');
   
-  // 헤더의 colspan 계산
-  const nem1Colspan = nem1Lanes.laneCount || 1;
-  const nem2Colspan = nem2Lanes.laneCount || 1;
-  
   container.innerHTML = `
-    <table class="schedule-table block-mode">
+    <table class="schedule-table">
       <thead>
         <tr>
-          <th class="time-header">시간</th>
-          <th class="nem1" colspan="${nem1Colspan}">1️⃣ 1넴</th>
-          <th class="divider-header"></th>
-          <th class="nem2" colspan="${nem2Colspan}">2️⃣ 2넴</th>
+          <th>시간</th>
+          <th class="nem1">1️⃣ 1넴</th>
+          <th class="nem2">2️⃣ 2넴</th>
           <th class="total">합계</th>
         </tr>
       </thead>
