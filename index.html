@@ -1408,7 +1408,7 @@
       <span class="hint-text">드래그하여 네임드 간 이동 | Delete: 비활성화 | Ctrl+Del: 선택 외 비활성화 | Ctrl+Z: 되돌리기</span>
       <button class="move-btn cancel" onclick="clearSelection()">선택 취소</button>
     </div>
-    <div class="edit-hint" id="edit-hint" style="display:none;">💡 빈 공간 드래그로 여러 칩 선택</div>
+    <div class="edit-hint" id="edit-hint" style="display:none;">💡 드래그 또는 Ctrl+클릭으로 칩 선택</div>
 
     <!-- 선택 박스 오버레이 -->
     <div class="selection-box" id="selection-box"></div>
@@ -1638,7 +1638,7 @@
 const WEBHOOK_URL = 'https://n8n-production-f0a7.up.railway.app/webhook/raid';
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 const TIME_ORDER = ['PM 6', 'PM 7', 'PM 8', 'PM 9', 'PM 10', 'PM 11', 'AM 12', 'AM 1', 'AM 2'];
-const TIME_LABELS = ['18시', '19시', '20시', '21시', '22시', '23시', '익일00시', '익일01시', '익일02시'];
+const TIME_LABELS = ['18시', '19시', '20시', '21시', '22시', '23시', '00시', '01시', '02시'];
 
 const JOB_MAP = {
   '수호성': { class: 'job-tank', icon: '🛡' },
@@ -2784,6 +2784,27 @@ document.addEventListener('keydown', (e) => {
 // ============================================
 document.addEventListener('mousedown', (e) => {
   if (currentMode !== 'edit') return;
+  
+  const clickedChip = e.target.closest('.player-chip');
+  
+  // Ctrl+클릭: 개별 칩 토글 선택
+  if (clickedChip && (e.ctrlKey || e.metaKey)) {
+    const nickname = clickedChip.dataset.nickname;
+    const timeIdx = clickedChip.dataset.timeIdx;
+    const key = `${nickname}|${timeIdx}`;
+    
+    if (selectedChips.has(key)) {
+      selectedChips.delete(key);
+      clickedChip.classList.remove('selected');
+    } else {
+      selectedChips.add(key);
+      clickedChip.classList.add('selected');
+    }
+    
+    updateMoveControls();
+    e.preventDefault();
+    return;
+  }
   
   // 선택된 칩 위에서 드래그 시작 (이동용) - 먼저 체크
   const chip = e.target.closest('.player-chip.selected');
