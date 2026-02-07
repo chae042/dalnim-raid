@@ -2324,6 +2324,12 @@ function openRaidSettingsModal() {
     `<option value="${r.id}">${r.레이드명}</option>`
   ).join('');
   
+  // 현재 선택된 탭 기준으로 설정
+  const currentRaid = raidSettings.find(r => r.레이드명 === currentRaidType);
+  if (currentRaid) {
+    select.value = currentRaid.id;
+  }
+  
   loadRaidSettingsForEdit();
   openModal('raid-settings-modal');
 }
