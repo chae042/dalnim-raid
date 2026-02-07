@@ -240,7 +240,6 @@
   .raid-tabs {
     display: flex;
     gap: 8px;
-    margin-bottom: 20px;
     justify-content: center;
   }
 
@@ -778,6 +777,193 @@
     font-size: 12px;
     color: #444;
   }
+
+  /* 플로팅 버튼 */
+  .floating-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #ffd700;
+    color: #1a1a2e;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    transition: all 0.2s;
+    z-index: 100;
+  }
+
+  .floating-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(255, 215, 0, 0.6);
+  }
+
+  /* 레이드 탭 컨테이너 */
+  .raid-tabs-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    justify-content: center;
+  }
+
+  .raid-control-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #2a2a4a;
+    border: 1px solid #3a3a5a;
+    color: #888;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .raid-control-btn:hover {
+    background: #3a3a5a;
+    color: #fff;
+    border-color: #ffd700;
+  }
+
+  /* 모달 */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .modal {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    border: 1px solid #3a3a5a;
+    transform: scale(0.9);
+    transition: all 0.2s;
+  }
+
+  .modal-overlay.active .modal {
+    transform: scale(1);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffd700;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  .modal-close:hover {
+    color: #fff;
+  }
+
+  .modal-body .form-group {
+    margin-bottom: 16px;
+  }
+
+  .modal-body label {
+    display: block;
+    margin-bottom: 6px;
+    color: #aaa;
+    font-size: 13px;
+  }
+
+  .modal-body input,
+  .modal-body select {
+    width: 100%;
+    padding: 10px 12px;
+    background: #16213e;
+    border: 1px solid #2a2a4a;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+  }
+
+  .modal-body input:focus,
+  .modal-body select:focus {
+    outline: none;
+    border-color: #ffd700;
+  }
+
+  .modal-footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .modal-btn.primary {
+    background: #ffd700;
+    color: #1a1a2e;
+  }
+
+  .modal-btn.primary:hover {
+    background: #ffed4a;
+  }
+
+  .modal-btn.secondary {
+    background: #2a2a4a;
+    color: #aaa;
+  }
+
+  .modal-btn.secondary:hover {
+    background: #3a3a5a;
+    color: #fff;
+  }
+
+  .modal-btn.danger {
+    background: #dc2626;
+    color: #fff;
+  }
+
+  .modal-btn.danger:hover {
+    background: #ef4444;
+  }
 </style>
 </head>
 <body>
@@ -789,20 +975,23 @@
     <div class="subtitle">등록 및 시간대별 참여 가능 인원</div>
   </div>
 
-  <!-- 메인 탭 -->
-  <div class="main-tabs">
+  <!-- 메인 탭 (일정 보기만) -->
+  <div class="main-tabs" style="display: none;">
     <div class="main-tab active" onclick="showMainTab('view')">📋 일정 보기</div>
-    <div class="main-tab" onclick="showMainTab('register')">✏️ 등록/수정</div>
   </div>
 
   <!-- 일정 보기 패널 -->
   <div id="view-panel" class="panel active">
     <!-- 레이드 타입 탭 (동적 생성) -->
-    <div class="raid-tabs" id="raid-tabs"></div>
+    <div class="raid-tabs-container">
+      <div class="raid-tabs" id="raid-tabs"></div>
+      <button class="raid-control-btn" onclick="openAddRaidModal()" title="레이드 추가">➕</button>
+      <button class="raid-control-btn" onclick="openRaidSettingsModal()" title="레이드 설정">⚙️</button>
+    </div>
 
     <!-- 편집 모드 버튼 -->
     <div class="edit-mode-bar">
-      <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">✏️ 편집 모드</button>
+      <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">✅ 편집 완료</button>
     </div>
 
     <!-- 요일 탭 -->
@@ -850,102 +1039,188 @@
     </div>
   </div>
 
-  <!-- 등록/수정 패널 -->
-  <div id="register-panel" class="panel">
-    <div class="register-panel">
-      <div id="register-message"></div>
-      
-      <div class="form-group">
-        <label>닉네임 *</label>
-        <div class="search-box">
-          <input type="text" id="nickname" placeholder="캐릭터 이름">
-          <button class="search-btn" onclick="loadMyInfo()">불러오기</button>
+  <!-- 플로팅 버튼 (참가자 등록) -->
+  <button class="floating-btn" onclick="openRegisterModal()" title="참가자 등록">✏️</button>
+
+  <!-- 참가자 등록 모달 -->
+  <div class="modal-overlay" id="register-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">✏️ 참가 등록/수정</span>
+        <button class="modal-close" onclick="closeModal('register-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="register-message"></div>
+        
+        <div class="form-group">
+          <label>닉네임 *</label>
+          <div class="search-box">
+            <input type="text" id="nickname" placeholder="캐릭터 이름">
+            <button class="search-btn" onclick="loadMyInfo()">불러오기</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>직업 *</label>
+          <select id="job">
+            <option value="">선택하세요</option>
+            <option value="수호성">수호성</option>
+            <option value="검성">검성</option>
+            <option value="궁성">궁성</option>
+            <option value="마도성">마도성</option>
+            <option value="치유성">치유성</option>
+            <option value="호법성">호법성</option>
+            <option value="살성">살성</option>
+            <option value="정령성">정령성</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>네임드</label>
+          <select id="named">
+            <option value="">선택하세요</option>
+            <option value="1넴">1넴</option>
+            <option value="2넴">2넴</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>시작 가능 시간</label>
+          <select id="startTime">
+            <option value="상관없음">상관없음</option>
+            <option value="PM 6">PM 6 (18시)</option>
+            <option value="PM 7">PM 7 (19시)</option>
+            <option value="PM 8">PM 8 (20시)</option>
+            <option value="PM 9">PM 9 (21시)</option>
+            <option value="PM 10">PM 10 (22시)</option>
+            <option value="PM 11">PM 11 (23시)</option>
+            <option value="AM 12">AM 12 (24시)</option>
+            <option value="AM 1">AM 1 (01시)</option>
+            <option value="AM 2">AM 2 (02시)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>종료 가능 시간</label>
+          <select id="endTime">
+            <option value="상관없음">상관없음</option>
+            <option value="PM 6">PM 6 (18시)</option>
+            <option value="PM 7">PM 7 (19시)</option>
+            <option value="PM 8">PM 8 (20시)</option>
+            <option value="PM 9">PM 9 (21시)</option>
+            <option value="PM 10">PM 10 (22시)</option>
+            <option value="PM 11">PM 11 (23시)</option>
+            <option value="AM 12">AM 12 (24시)</option>
+            <option value="AM 1">AM 1 (01시)</option>
+            <option value="AM 2">AM 2 (02시)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>레이드 종류</label>
+          <select id="raidType"></select>
+        </div>
+
+        <div class="form-group">
+          <label>못하는 요일 (클릭해서 선택)</label>
+          <div class="day-buttons">
+            <button type="button" class="day-btn" data-day="월">월</button>
+            <button type="button" class="day-btn" data-day="화">화</button>
+            <button type="button" class="day-btn" data-day="수">수</button>
+            <button type="button" class="day-btn" data-day="목">목</button>
+            <button type="button" class="day-btn" data-day="금">금</button>
+            <button type="button" class="day-btn" data-day="토">토</button>
+            <button type="button" class="day-btn" data-day="일">일</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>참고사항</label>
+          <input type="text" id="note" placeholder="예: 금토만 가능, 24시 이전 선호">
         </div>
       </div>
-
-      <div class="form-group">
-        <label>직업 *</label>
-        <select id="job">
-          <option value="">선택하세요</option>
-          <option value="수호성">수호성</option>
-          <option value="검성">검성</option>
-          <option value="궁성">궁성</option>
-          <option value="마도성">마도성</option>
-          <option value="치유성">치유성</option>
-          <option value="호법성">호법성</option>
-          <option value="살성">살성</option>
-          <option value="정령성">정령성</option>
-        </select>
+      <div class="modal-footer">
+        <button class="modal-btn secondary" onclick="closeModal('register-modal')">취소</button>
+        <button class="modal-btn primary" onclick="submitForm()">저장하기</button>
       </div>
+    </div>
+  </div>
 
-      <div class="form-group">
-        <label>네임드</label>
-        <select id="named">
-          <option value="">선택하세요</option>
-          <option value="1넴">1넴</option>
-          <option value="2넴">2넴</option>
-        </select>
+  <!-- 레이드 추가 모달 -->
+  <div class="modal-overlay" id="add-raid-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">➕ 새 레이드 추가</span>
+        <button class="modal-close" onclick="closeModal('add-raid-modal')">&times;</button>
       </div>
-
-      <div class="form-group">
-        <label>시작 가능 시간</label>
-        <select id="startTime">
-          <option value="상관없음">상관없음</option>
-          <option value="PM 6">PM 6 (18시)</option>
-          <option value="PM 7">PM 7 (19시)</option>
-          <option value="PM 8">PM 8 (20시)</option>
-          <option value="PM 9">PM 9 (21시)</option>
-          <option value="PM 10">PM 10 (22시)</option>
-          <option value="PM 11">PM 11 (23시)</option>
-          <option value="AM 12">AM 12 (24시)</option>
-          <option value="AM 1">AM 1 (01시)</option>
-          <option value="AM 2">AM 2 (02시)</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>종료 가능 시간</label>
-        <select id="endTime">
-          <option value="상관없음">상관없음</option>
-          <option value="PM 6">PM 6 (18시)</option>
-          <option value="PM 7">PM 7 (19시)</option>
-          <option value="PM 8">PM 8 (20시)</option>
-          <option value="PM 9">PM 9 (21시)</option>
-          <option value="PM 10">PM 10 (22시)</option>
-          <option value="PM 11">PM 11 (23시)</option>
-          <option value="AM 12">AM 12 (24시)</option>
-          <option value="AM 1">AM 1 (01시)</option>
-          <option value="AM 2">AM 2 (02시)</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>레이드 종류</label>
-        <select id="raidType">
-          <option value="트라이팟">트라이팟</option>
-          <option value="클리어팟">클리어팟</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>못하는 요일 (클릭해서 선택)</label>
-        <div class="day-buttons">
-          <button type="button" class="day-btn" data-day="월">월</button>
-          <button type="button" class="day-btn" data-day="화">화</button>
-          <button type="button" class="day-btn" data-day="수">수</button>
-          <button type="button" class="day-btn" data-day="목">목</button>
-          <button type="button" class="day-btn" data-day="금">금</button>
-          <button type="button" class="day-btn" data-day="토">토</button>
-          <button type="button" class="day-btn" data-day="일">일</button>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>레이드 이름 *</label>
+          <input type="text" id="new-raid-name" placeholder="예: 트라이팟, 클리어팟">
+        </div>
+        <div class="form-group">
+          <label>네임드 수</label>
+          <select id="new-raid-named-count">
+            <option value="1">1넴</option>
+            <option value="2" selected>2넴 (1넴, 2넴)</option>
+            <option value="3">3넴 (1넴, 2넴, 3넴)</option>
+            <option value="4">4넴</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>필요 인원 (하이라이트 기준)</label>
+          <input type="number" id="new-raid-required" value="8" min="1" max="40">
         </div>
       </div>
-
-      <div class="form-group">
-        <label>참고사항</label>
-        <input type="text" id="note" placeholder="예: 금토만 가능, 24시 이전 선호">
+      <div class="modal-footer">
+        <button class="modal-btn secondary" onclick="closeModal('add-raid-modal')">취소</button>
+        <button class="modal-btn primary" onclick="addNewRaid()">추가</button>
       </div>
+    </div>
+  </div>
 
-      <button class="submit-btn" onclick="submitForm()">저장하기</button>
+  <!-- 레이드 설정 모달 -->
+  <div class="modal-overlay" id="raid-settings-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">⚙️ 레이드 설정</span>
+        <button class="modal-close" onclick="closeModal('raid-settings-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>레이드 선택</label>
+          <select id="settings-raid-select" onchange="loadRaidSettingsForEdit()"></select>
+        </div>
+        <div class="form-group">
+          <label>레이드 이름</label>
+          <input type="text" id="edit-raid-name">
+        </div>
+        <div class="form-group">
+          <label>네임드 수</label>
+          <select id="edit-raid-named-count">
+            <option value="1">1넴</option>
+            <option value="2">2넴 (1넴, 2넴)</option>
+            <option value="3">3넴 (1넴, 2넴, 3넴)</option>
+            <option value="4">4넴</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>필요 인원 (하이라이트 기준)</label>
+          <input type="number" id="edit-raid-required" value="8" min="1" max="40">
+        </div>
+        <div class="form-group">
+          <label>활성화</label>
+          <select id="edit-raid-active">
+            <option value="true">활성화</option>
+            <option value="false">비활성화 (숨김)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn danger" onclick="deleteRaid()">삭제</button>
+        <button class="modal-btn secondary" onclick="closeModal('raid-settings-modal')">취소</button>
+        <button class="modal-btn primary" onclick="saveRaidSettings()">저장</button>
+      </div>
     </div>
   </div>
 </div>
@@ -973,6 +1248,12 @@ let raidIdToName = {};
 let currentDay = '금';
 let currentRaidType = '';
 let currentMode = 'view';
+
+// 현재 레이드의 필요인원 가져오기
+function getCurrentRaidRequired() {
+  const raid = raidSettings.find(r => r.레이드명 === currentRaidType);
+  return raid?.필요인원 || 8;
+}
 
 // 메인 탭 전환
 function showMainTab(tabName) {
@@ -1255,9 +1536,10 @@ function renderViewMode(container, players) {
   };
   
   // 행 생성
+  const requiredCount = getCurrentRaidRequired();
   const rows = TIME_ORDER.map((_, idx) => {
     const total = getActiveCount(nem1Segs, idx) + getActiveCount(nem2Segs, idx);
-    const highlightClass = total >= 8 ? 'highlight' : '';
+    const highlightClass = total >= requiredCount ? 'highlight' : '';
     return `<tr style="height:${ROW_HEIGHT}px;">
       <td class="time-cell">${TIME_LABELS[idx]}</td>
       <td class="nem1-block-cell"></td>
@@ -1392,9 +1674,10 @@ function renderEditMode(container, players) {
   const nem1LaneCount = nem1Players.length || 1;
   const nem2LaneCount = nem2Players.length || 1;
   
+  const requiredCount = getCurrentRaidRequired();
   const rows = TIME_ORDER.map((_, idx) => {
     const total = getActiveCount(idx, '1넴') + getActiveCount(idx, '2넴');
-    const highlightClass = total >= 8 ? 'highlight' : '';
+    const highlightClass = total >= requiredCount ? 'highlight' : '';
     return `
       <tr>
         <td class="time-cell">${TIME_LABELS[idx]}</td>
@@ -1616,12 +1899,12 @@ function toggleEditMode() {
   
   if (currentMode === 'view') {
     currentMode = 'edit';
-    btn.textContent = '✅ 편집 완료';
+    btn.textContent = '✏️ 편집 모드';
     btn.classList.add('active');
     document.getElementById('edit-hint').style.display = 'block';
   } else {
     currentMode = 'view';
-    btn.textContent = '✏️ 편집 모드';
+    btn.textContent = '✅ 편집 완료';
     btn.classList.remove('active');
     document.getElementById('edit-hint').style.display = 'none';
     clearSelection();
@@ -1924,6 +2207,171 @@ document.addEventListener('mouseup', (e) => {
     clearSelection();
   }
 });
+
+// ============================================
+// 모달 관련 함수
+// ============================================
+function openModal(modalId) {
+  document.getElementById(modalId).classList.add('active');
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.remove('active');
+}
+
+// 참가자 등록 모달
+function openRegisterModal() {
+  // 레이드 종류 select 업데이트
+  const select = document.getElementById('raidType');
+  select.innerHTML = raidSettings.map(r => 
+    `<option value="${r.레이드명}">${r.레이드명}</option>`
+  ).join('');
+  openModal('register-modal');
+}
+
+// 레이드 추가 모달
+function openAddRaidModal() {
+  document.getElementById('new-raid-name').value = '';
+  document.getElementById('new-raid-named-count').value = '2';
+  document.getElementById('new-raid-required').value = '8';
+  openModal('add-raid-modal');
+}
+
+async function addNewRaid() {
+  const name = document.getElementById('new-raid-name').value.trim();
+  const namedCount = parseInt(document.getElementById('new-raid-named-count').value);
+  const required = parseInt(document.getElementById('new-raid-required').value);
+  
+  if (!name) {
+    alert('레이드 이름을 입력하세요');
+    return;
+  }
+  
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'addRaidSetting',
+        data: {
+          레이드명: name,
+          네임드수: namedCount,
+          필요인원: required,
+          활성화: true
+        }
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      alert('레이드가 추가되었습니다');
+      closeModal('add-raid-modal');
+      await loadRaidSettings();
+      renderRaidTabs();
+    } else {
+      alert('추가 실패: ' + (result.message || '알 수 없는 오류'));
+    }
+  } catch (error) {
+    alert('추가 실패: ' + error.message);
+  }
+}
+
+// 레이드 설정 모달
+function openRaidSettingsModal() {
+  const select = document.getElementById('settings-raid-select');
+  select.innerHTML = raidSettings.map(r => 
+    `<option value="${r.id}">${r.레이드명}</option>`
+  ).join('');
+  
+  loadRaidSettingsForEdit();
+  openModal('raid-settings-modal');
+}
+
+function loadRaidSettingsForEdit() {
+  const select = document.getElementById('settings-raid-select');
+  const selectedId = select.value;
+  const raid = raidSettings.find(r => r.id === selectedId);
+  
+  if (raid) {
+    document.getElementById('edit-raid-name').value = raid.레이드명;
+    document.getElementById('edit-raid-named-count').value = raid.네임드수 || 2;
+    document.getElementById('edit-raid-required').value = raid.필요인원 || 8;
+    document.getElementById('edit-raid-active').value = raid.활성화 !== false ? 'true' : 'false';
+  }
+}
+
+async function saveRaidSettings() {
+  const selectedId = document.getElementById('settings-raid-select').value;
+  const name = document.getElementById('edit-raid-name').value.trim();
+  const namedCount = parseInt(document.getElementById('edit-raid-named-count').value);
+  const required = parseInt(document.getElementById('edit-raid-required').value);
+  const active = document.getElementById('edit-raid-active').value === 'true';
+  
+  if (!name) {
+    alert('레이드 이름을 입력하세요');
+    return;
+  }
+  
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateRaidSetting',
+        data: {
+          id: selectedId,
+          레이드명: name,
+          네임드수: namedCount,
+          필요인원: required,
+          활성화: active
+        }
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      alert('설정이 저장되었습니다');
+      closeModal('raid-settings-modal');
+      await loadRaidSettings();
+      renderRaidTabs();
+      renderSchedule();
+    } else {
+      alert('저장 실패: ' + (result.message || '알 수 없는 오류'));
+    }
+  } catch (error) {
+    alert('저장 실패: ' + error.message);
+  }
+}
+
+async function deleteRaid() {
+  const selectedId = document.getElementById('settings-raid-select').value;
+  const raid = raidSettings.find(r => r.id === selectedId);
+  
+  if (!confirm(`"${raid.레이드명}" 레이드를 삭제하시겠습니까?`)) return;
+  
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'deleteRaidSetting',
+        data: { id: selectedId }
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      alert('레이드가 삭제되었습니다');
+      closeModal('raid-settings-modal');
+      await loadRaidSettings();
+      renderRaidTabs();
+    } else {
+      alert('삭제 실패: ' + (result.message || '알 수 없는 오류'));
+    }
+  } catch (error) {
+    alert('삭제 실패: ' + error.message);
+  }
+}
 
 // 초기 로드
 initViewPanel();
