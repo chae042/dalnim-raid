@@ -249,10 +249,15 @@
     background: #16213e;
     border: 1px solid #2a2a4a;
     color: #888;
-    cursor: pointer;
+    cursor: grab;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s;
+    user-select: none;
+  }
+
+  .raid-tab:active {
+    cursor: grabbing;
   }
 
   .raid-tab:hover {
@@ -414,6 +419,13 @@
     color: #1a1a2e;
   }
 
+  /* 모바일 가로 스크롤 래퍼 */
+  .table-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Schedule Table */
   .schedule-table {
     width: 100%;
@@ -435,8 +447,15 @@
   }
   .schedule-table th.nem2 { 
     color: #ff7675; 
-    border-left: 3px solid #ffd70050;
     background: rgba(255, 118, 117, 0.1);
+  }
+  .schedule-table th.nem3 { 
+    color: #a855f7; 
+    background: rgba(168, 85, 247, 0.1);
+  }
+  .schedule-table th.nem4 { 
+    color: #ec4899; 
+    background: rgba(236, 72, 153, 0.1);
   }
   .schedule-table th.total { color: #ffd700; }
 
@@ -499,7 +518,6 @@
   }
 
   .timeline-table .nem2-block-cell {
-    border-left: 3px solid #ffd70050;
     background: rgba(255, 118, 117, 0.05);
   }
 
@@ -558,21 +576,26 @@
     width: 70px;
   }
 
-  .schedule-table.edit-table .divider-header,
-  .schedule-table.edit-table .divider-cell {
-    width: 3px;
-    background: #3a3a5a;
+  /* 네임드 구분선 - 가느다란 노란색 */
+  .schedule-table .divider-header,
+  .schedule-table .divider-cell {
+    width: 1px !important;
+    min-width: 1px !important;
+    max-width: 1px !important;
+    background: rgba(255, 215, 0, 0.5);
     padding: 0;
+    border: none;
   }
 
   .schedule-table.edit-table .player-lane-cell {
     padding: 4px;
     text-align: center;
     vertical-align: middle;
+    min-width: 85px;
   }
 
   .schedule-table.edit-table .player-lane-cell.empty {
-    min-width: 70px;
+    min-width: 85px;
   }
 
   /* 박스 선택 */
@@ -665,7 +688,9 @@
 
   /* 드롭 영역 하이라이트 */
   .schedule-table.edit-table th.nem1.drop-hover,
-  .schedule-table.edit-table th.nem2.drop-hover {
+  .schedule-table.edit-table th.nem2.drop-hover,
+  .schedule-table.edit-table th.nem3.drop-hover,
+  .schedule-table.edit-table th.nem4.drop-hover {
     background: rgba(255, 215, 0, 0.3);
     box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.5);
   }
@@ -695,6 +720,8 @@
     transition: all 0.15s;
     border: 1px solid transparent;
     cursor: default;
+    min-width: 60px;
+    justify-content: center;
   }
 
   .player-chip:hover {
@@ -863,6 +890,28 @@
   .floating-btn:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(255, 215, 0, 0.6);
+  }
+
+  /* 주차 선택 */
+  .week-controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  #week-select {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #2a2a4a;
+    border: 1px solid #3a3a5a;
+    color: #e0e0e0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  #week-select:focus {
+    outline: none;
+    border-color: #ffd700;
   }
 
   /* 레이드 탭 컨테이너 */
@@ -1042,9 +1091,127 @@
   .is-mobile .edit-hint {
     display: none !important;
   }
+
+  /* 토스트 알림 */
+  #toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: #1a1a2e;
+    border: 1px solid #ffd700;
+    border-radius: 12px;
+    padding: 14px 20px;
+    color: #fff;
+    font-size: 14px;
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+    pointer-events: auto;
+    max-width: 320px;
+    text-align: center;
+  }
+
+  .toast.success {
+    border-color: #4ade80;
+    box-shadow: 0 4px 20px rgba(74, 222, 128, 0.2);
+  }
+
+  .toast.error {
+    border-color: #f87171;
+    box-shadow: 0 4px 20px rgba(248, 113, 113, 0.2);
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
+  }
+
+  /* 커스텀 확인 모달 */
+  .confirm-modal-content {
+    text-align: center;
+    padding: 30px;
+    max-width: 300px;
+  }
+
+  .confirm-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .confirm-modal-content p {
+    color: #ccc;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .confirm-btn {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .confirm-btn.cancel {
+    background: #2a2a4a;
+    border: 1px solid #3a3a5a;
+    color: #888;
+  }
+
+  .confirm-btn.cancel:hover {
+    background: #3a3a5a;
+    color: #fff;
+  }
+
+  .confirm-btn.ok {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    border: none;
+    color: #1a1a2e;
+  }
+
+  .confirm-btn.ok:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  }
 </style>
 </head>
 <body>
+
+<!-- 토스트 컨테이너 -->
+<div id="toast-container"></div>
+
+<!-- 커스텀 확인 모달 -->
+<div id="confirm-modal" class="modal" style="display:none;">
+  <div class="modal-content confirm-modal-content">
+    <div class="confirm-icon">🌙</div>
+    <p id="confirm-message"></p>
+    <div class="confirm-buttons">
+      <button class="confirm-btn cancel" onclick="handleConfirm(false)">아니요</button>
+      <button class="confirm-btn ok" onclick="handleConfirm(true)">네</button>
+    </div>
+  </div>
+</div>
 
 <div class="container">
   <div class="header">
@@ -1060,6 +1227,11 @@
 
   <!-- 일정 보기 패널 -->
   <div id="view-panel" class="panel active">
+    <!-- 주차 선택 -->
+    <div class="week-controls">
+      <select id="week-select" onchange="onWeekSelect()"></select>
+    </div>
+
     <!-- 레이드 타입 탭 (동적 생성) -->
     <div class="raid-tabs-container">
       <div class="raid-tabs" id="raid-tabs"></div>
@@ -1067,8 +1239,8 @@
       <button class="raid-control-btn" onclick="openRaidSettingsModal()" title="레이드 설정">⚙️</button>
     </div>
 
-    <!-- 만료 레이드 안내 -->
-    <div class="expired-notice" id="expired-notice" style="display:none;">
+    <!-- 만료 레이드 안내 - 비활성화 -->
+    <div class="expired-notice" id="expired-notice" style="display:none !important;">
       ⚠️ 기간이 종료된 레이드입니다 (7일 후 자동 숨김)
     </div>
 
@@ -1091,7 +1263,7 @@
     <!-- 이동 컨트롤 (편집모드) -->
     <div class="move-controls" id="move-controls">
       <span id="selected-count">0개 선택됨</span>
-      <span class="hint-text">드래그하여 1넴/2넴으로 이동 | Delete: 비활성화 | Ctrl+Del: 선택 외 비활성화 | Ctrl+Z: 되돌리기</span>
+      <span class="hint-text">드래그하여 네임드 간 이동 | Delete: 비활성화 | Ctrl+Del: 선택 외 비활성화 | Ctrl+Z: 되돌리기</span>
       <button class="move-btn cancel" onclick="clearSelection()">선택 취소</button>
     </div>
     <div class="edit-hint" id="edit-hint" style="display:none;">💡 빈 공간 드래그로 여러 칩 선택</div>
@@ -1118,7 +1290,7 @@
     <div id="notes-section"></div>
 
     <div class="footer">
-      🌙 달님봇 · <span id="update-time"></span>
+      🌙 달님이 · <span id="update-time"></span>
     </div>
   </div>
 
@@ -1135,6 +1307,11 @@
       <div class="modal-body">
         <div id="register-message"></div>
         
+        <div class="form-group">
+          <label>레이드 종류 *</label>
+          <select id="raidType" onchange="updateNamedOptions()"></select>
+        </div>
+
         <div class="form-group">
           <label>닉네임 *</label>
           <div class="search-box">
@@ -1162,8 +1339,6 @@
           <label>네임드</label>
           <select id="named">
             <option value="">선택하세요</option>
-            <option value="1넴">1넴</option>
-            <option value="2넴">2넴</option>
           </select>
         </div>
 
@@ -1197,11 +1372,6 @@
             <option value="AM 1">AM 1 (01시)</option>
             <option value="AM 2">AM 2 (02시)</option>
           </select>
-        </div>
-
-        <div class="form-group">
-          <label>레이드 종류</label>
-          <select id="raidType"></select>
         </div>
 
         <div class="form-group">
@@ -1254,17 +1424,14 @@
           <label>필요 인원 (하이라이트 기준)</label>
           <input type="number" id="new-raid-required" value="8" min="1" max="40">
         </div>
-        <div class="form-group">
+        <!-- 기간 필드 제거됨 (주차 시스템으로 대체) -->
+        <div class="form-group" id="new-raid-period-group" style="display:none;">
           <label>
-            <input type="checkbox" id="new-raid-no-period" onchange="toggleNewRaidPeriod()"> 기간 없음 (상시)
+            <input type="checkbox" id="new-raid-no-period" checked> 기간 없음 (상시)
           </label>
         </div>
-        <div class="form-group" id="new-raid-period-group">
-          <label>시작일</label>
+        <div class="form-group" id="new-raid-period-group2" style="display:none;">
           <input type="date" id="new-raid-start">
-        </div>
-        <div class="form-group" id="new-raid-period-group2">
-          <label>종료일</label>
           <input type="date" id="new-raid-end">
         </div>
       </div>
@@ -1304,24 +1471,15 @@
           <label>필요 인원 (하이라이트 기준)</label>
           <input type="number" id="edit-raid-required" value="8" min="1" max="40">
         </div>
-        <div class="form-group">
-          <label>활성화</label>
+        <!-- 활성화/기간 필드 제거됨 (주차 시스템으로 대체) -->
+        <div class="form-group" style="display:none;">
           <select id="edit-raid-active">
-            <option value="true">활성화</option>
-            <option value="false">비활성화 (숨김)</option>
+            <option value="true" selected>활성화</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="edit-raid-no-period" onchange="toggleEditRaidPeriod()"> 기간 없음 (상시)
-          </label>
-        </div>
-        <div class="form-group" id="edit-raid-period-group">
-          <label>시작일</label>
+        <div class="form-group" style="display:none;">
+          <input type="checkbox" id="edit-raid-no-period" checked>
           <input type="date" id="edit-raid-start">
-        </div>
-        <div class="form-group" id="edit-raid-period-group2">
-          <label>종료일</label>
           <input type="date" id="edit-raid-end">
         </div>
       </div>
@@ -1356,17 +1514,164 @@ let raidSettings = [];
 let raidIdToName = {};
 let currentDay = '금';
 let currentRaidType = '';
+let currentWeekStart = null;
+
+// ============================================
+// 토스트 알림 + 커스텀 확인창
+// ============================================
+function showToast(message, type = 'default') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  
+  setTimeout(() => toast.remove(), 3000);
+}
+
+let confirmResolve = null;
+
+function showConfirm(message) {
+  return new Promise(resolve => {
+    confirmResolve = resolve;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-modal').style.display = 'flex';
+  });
+}
+
+function handleConfirm(result) {
+  document.getElementById('confirm-modal').style.display = 'none';
+  if (confirmResolve) {
+    confirmResolve(result);
+    confirmResolve = null;
+  }
+}
+
+// 현재 주차 시작일(수요일) 계산
+function getCurrentWeekStart() {
+  const today = new Date();
+  const day = today.getDay(); // 0=일, 1=월, ..., 3=수
+  let diff = day - 3;
+  if (diff < 0) diff += 7;
+  const wed = new Date(today);
+  wed.setDate(today.getDate() - diff);
+  // UTC 문제 방지: 직접 문자열 생성
+  const y = wed.getFullYear();
+  const m = String(wed.getMonth() + 1).padStart(2, '0');
+  const d = String(wed.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// 주차 표시용 포맷
+function formatWeekLabel(weekStart) {
+  // ISO 문자열을 로컬 날짜로 파싱 (UTC 문제 방지)
+  const [y, m, d] = weekStart.split('-').map(Number);
+  const start = new Date(y, m-1, d);
+  const end = new Date(y, m-1, d + 6);
+  return `${start.getMonth()+1}/${start.getDate()}~${end.getMonth()+1}/${end.getDate()}`;
+}
+
+// 지난 주차 목록 생성 (최근 4주)
+function getWeekOptions() {
+  const weeks = [];
+  const current = getCurrentWeekStart();
+  const [cy, cm, cd] = current.split('-').map(Number);
+  
+  for (let i = 0; i < 4; i++) {
+    const d = new Date(cy, cm - 1, cd - (i * 7));
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    weeks.push(`${y}-${m}-${day}`);
+  }
+  return weeks;
+}
+
+// 주차 드롭다운 렌더링
+function renderWeekSelect() {
+  const select = document.getElementById('week-select');
+  if (!select) return;
+  
+  const weeks = getWeekOptions();
+  const current = getCurrentWeekStart();
+  
+  select.innerHTML = weeks.map((w, i) => {
+    const label = formatWeekLabel(w);
+    const isCurrent = w === current;
+    const displayText = isCurrent ? `📌 이번 주 ${label}` : label;
+    return `<option value="${w}" ${w === (currentWeekStart || current) ? 'selected' : ''}>${displayText}</option>`;
+  }).join('');
+}
+
+// 주차 선택 시
+function onWeekSelect() {
+  const select = document.getElementById('week-select');
+  currentWeekStart = select.value;
+  
+  // 지난 주차 선택 시 편집 모드 종료
+  if (!isCurrentWeek()) {
+    if (currentMode === 'edit') {
+      currentMode = 'view';
+      const btn = document.getElementById('edit-mode-btn');
+      btn.textContent = '✅ 편집 완료';
+      btn.classList.remove('active');
+      document.getElementById('edit-hint').style.display = 'none';
+      clearSelection();
+    }
+  }
+  
+  updateEditButtonState();
+  loadPlayerList();
+}
+
+// 현재 주차인지 확인
+function isCurrentWeek() {
+  return currentWeekStart === getCurrentWeekStart();
+}
+
+// 편집 버튼 상태 업데이트
+function updateEditButtonState() {
+  const btn = document.getElementById('edit-mode-btn');
+  if (isCurrentWeek()) {
+    btn.disabled = false;
+    btn.title = '';
+    btn.style.opacity = '1';
+  } else {
+    btn.disabled = true;
+    btn.title = '지난 주차는 편집할 수 없습니다';
+    btn.style.opacity = '0.5';
+  }
+}
+
 let currentMode = 'view';
 
-// 레인 순서 관리 (드래그 드롭 배치용)
-let nem1LaneOrder = [];  // 닉네임 배열
-let nem2LaneOrder = [];  // 닉네임 배열
+// 레인 순서 관리 (드래그 드롭 배치용) - 동적
+let nemLaneOrders = {
+  '1넴': [],
+  '2넴': [],
+  '3넴': [],
+  '4넴': []
+};
 
 // 현재 레이드의 필요인원 가져오기
 function getCurrentRaidRequired() {
   const raid = raidSettings.find(r => r.레이드명 === currentRaidType);
   return raid?.필요인원 || 8;
 }
+
+// 현재 레이드 네임드 수 가져오기
+function getCurrentRaidNamedCount() {
+  const raid = raidSettings.find(r => r.레이드명 === currentRaidType);
+  return raid?.네임드수 || 2;
+}
+
+// 네임드 설정 (색상, 이름)
+const NEM_CONFIG = {
+  1: { name: '1넴', class: 'nem1', icon: '1️⃣', color: 'rgba(59, 130, 246, 0.3)' },
+  2: { name: '2넴', class: 'nem2', icon: '2️⃣', color: 'rgba(249, 115, 22, 0.3)' },
+  3: { name: '3넴', class: 'nem3', icon: '3️⃣', color: 'rgba(168, 85, 247, 0.3)' },
+  4: { name: '4넴', class: 'nem4', icon: '4️⃣', color: 'rgba(236, 72, 153, 0.3)' }
+};
 
 // 메인 탭 전환
 function showMainTab(tabName) {
@@ -1387,6 +1692,7 @@ async function initViewPanel() {
   if (raidSettings.length === 0) {
     await loadRaidSettings();
   }
+  renderWeekSelect();
   await loadPlayerList();
 }
 
@@ -1467,9 +1773,13 @@ async function loadRaidSettings() {
           네임드수: props.네임드수?.number || 2,
           필요인원: props.필요인원?.number || 8,
           활성화: props.활성화?.checkbox !== false,
-          기간: props.기간?.date || null  // { start: "2025-01-01", end: "2025-01-31" }
+          기간: props.기간?.date || null,
+          순서: props.순서?.number || 999
         };
       });
+      
+      // 순서로 정렬
+      raidSettings.sort((a, b) => (a.순서 || 999) - (b.순서 || 999));
       
       // ID → 이름 매핑
       raidIdToName = {};
@@ -1489,29 +1799,24 @@ async function loadRaidSettings() {
   }
 }
 
-// 레이드 만료 체크 (기간 종료일 지남)
+// 레이드 만료 체크 - 비활성화 (주차 시스템으로 대체)
 function isRaidExpired(raid) {
-  if (!raid.기간 || !raid.기간.end) return false;  // 기간없음 = 만료 안됨
-  const endDate = new Date(raid.기간.end);
-  endDate.setHours(23, 59, 59, 999);  // 종료일 끝까지
-  return endDate < new Date();
+  return false;
 }
 
-// 레이드 숨김 체크 (만료 후 7일 지남)
+// 레이드 숨김 체크 - 비활성화 (주차 시스템으로 대체)
 function isRaidHidden(raid) {
-  if (!raid.기간 || !raid.기간.end) return false;
-  const endDate = new Date(raid.기간.end);
-  endDate.setDate(endDate.getDate() + 7);  // +7일
-  endDate.setHours(23, 59, 59, 999);
-  return endDate < new Date();
+  return false;
 }
 
 // 레이드 탭 렌더링
 function renderRaidTabs() {
   const container = document.getElementById('raid-tabs');
   
-  // 숨김 처리 안 된 것만 표시
-  const visibleRaids = raidSettings.filter(r => !isRaidHidden(r));
+  // 숨김 처리 안 된 것만 표시, 순서로 정렬
+  const visibleRaids = raidSettings
+    .filter(r => !isRaidHidden(r))
+    .sort((a, b) => (a.순서 || 999) - (b.순서 || 999));
   
   container.innerHTML = visibleRaids.map((r, idx) => {
     const expired = isRaidExpired(r);
@@ -1519,8 +1824,14 @@ function renderRaidTabs() {
     const activeClass = r.레이드명 === currentRaidType ? 'active' : '';
     
     return `<div class="raid-tab ${activeClass} ${expiredClass}" 
-         data-raid="${r.레이드명}" 
+         data-raid="${r.레이드명}"
+         data-id="${r.id}"
          data-expired="${expired}"
+         draggable="true"
+         ondragstart="onTabDragStart(event)"
+         ondragover="onTabDragOver(event)"
+         ondrop="onTabDrop(event)"
+         ondragend="onTabDragEnd(event)"
          onclick="selectRaidType('${r.레이드명}')">${r.레이드명}</div>`;
   }).join('');
 }
@@ -1535,11 +1846,16 @@ async function loadPlayerList() {
     </div>
   `;
 
+  // 현재 주차 설정
+  if (!currentWeekStart) {
+    currentWeekStart = getCurrentWeekStart();
+  }
+
   try {
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'list' })
+      body: JSON.stringify({ action: 'list', weekStart: currentWeekStart })
     });
     const result = await response.json();
     
@@ -1570,8 +1886,10 @@ async function loadPlayerList() {
       renderDayTabs();
       renderSchedule();
       renderNotes();
+      updateEditButtonState();
     } else {
       container.innerHTML = '<div class="loading">등록된 참가자가 없습니다</div>';
+      updateEditButtonState();
     }
   } catch (error) {
     container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${error.message}</div>`;
@@ -1613,9 +1931,11 @@ function getPlayerNemAtTime(player, timeIdx) {
   return player.네임드; // 기본값
 }
 
-// 보기 모드 - 시간대별 네임드 지원
+// 보기 모드 - 동적 네임드 수 지원
 function renderViewMode(container, players) {
   const ROW_HEIGHT = 44;
+  const namedCount = getCurrentRaidNamedCount();
+  const nemNames = Array.from({length: namedCount}, (_, i) => `${i+1}넴`);
   
   // 플레이어별로 연속된 네임드 구간(세그먼트)으로 분리
   const createSegments = (player) => {
@@ -1624,7 +1944,6 @@ function renderViewMode(container, players) {
     let currentSeg = null;
     
     for (let t = startIdx; t <= endIdx; t++) {
-      // hidden 체크
       if (player.hiddenTimes && player.hiddenTimes.includes(t)) {
         if (currentSeg) {
           segments.push(currentSeg);
@@ -1649,8 +1968,12 @@ function renderViewMode(container, players) {
   
   // 모든 플레이어의 세그먼트 생성
   const allSegments = players.flatMap(createSegments);
-  const nem1Segs = allSegments.filter(s => s.nem === '1넴');
-  const nem2Segs = allSegments.filter(s => s.nem === '2넴');
+  
+  // 네임드별 세그먼트 분류
+  const nemSegsMap = {};
+  nemNames.forEach(nem => {
+    nemSegsMap[nem] = allSegments.filter(s => s.nem === nem);
+  });
   
   // 레인 배치 (겹침 처리)
   const assignLanes = (segs) => {
@@ -1669,8 +1992,11 @@ function renderViewMode(container, players) {
     return { segments: sorted, laneCount: lanes.length || 1 };
   };
   
-  const nem1Lanes = assignLanes(nem1Segs);
-  const nem2Lanes = assignLanes(nem2Segs);
+  // 네임드별 레인 배치
+  const nemLanesMap = {};
+  nemNames.forEach(nem => {
+    nemLanesMap[nem] = assignLanes(nemSegsMap[nem]);
+  });
   
   // 시간별 활동 인원 수
   const getActiveCount = (segs, timeIdx) => {
@@ -1693,62 +2019,90 @@ function renderViewMode(container, players) {
     }).join('');
   };
   
+  const laneWidth = 90; // 넉넉하게 (가로 스크롤 OK)
+  const totalHeight = TIME_ORDER.length * ROW_HEIGHT;
+  
+  // 네임드별 너비 계산
+  const nemWidths = {};
+  nemNames.forEach(nem => {
+    nemWidths[nem] = Math.max(nemLanesMap[nem].laneCount, 1) * laneWidth;
+  });
+  
+  // 테이블 최소 너비 (divider 포함)
+  const dividerCount = nemNames.length - 1;
+  let tableMinWidth = 80 + 60 + (dividerCount * 1); // 시간 + 합계 + divider(1px)
+  nemNames.forEach(nem => tableMinWidth += nemWidths[nem]);
+  
   // 행 생성
   const requiredCount = getCurrentRaidRequired();
   const rows = TIME_ORDER.map((_, idx) => {
-    const total = getActiveCount(nem1Segs, idx) + getActiveCount(nem2Segs, idx);
+    let total = 0;
+    nemNames.forEach(nem => total += getActiveCount(nemSegsMap[nem], idx));
     const highlightClass = total >= requiredCount ? 'highlight' : '';
+    
+    const nemCells = nemNames.map((nem, i) => {
+      const cell = `<td class="nem-block-cell" data-nem="${nem}"></td>`;
+      const divider = i < nemNames.length - 1 ? '<td class="divider-cell"></td>' : '';
+      return cell + divider;
+    }).join('');
+    
     return `<tr style="height:${ROW_HEIGHT}px;">
       <td class="time-cell">${TIME_LABELS[idx]}</td>
-      <td class="nem1-block-cell"></td>
-      <td class="nem2-block-cell"></td>
+      ${nemCells}
       <td class="total-cell ${highlightClass}">${total}명</td>
     </tr>`;
   }).join('');
   
-  const laneWidth = 80;
-  const nem1Width = Math.max(nem1Lanes.laneCount, 1) * laneWidth;
-  const nem2Width = Math.max(nem2Lanes.laneCount, 1) * laneWidth;
-  const totalHeight = TIME_ORDER.length * ROW_HEIGHT;
-  const tableMinWidth = 80 + nem1Width + nem2Width + 60; // 시간 + 1넴 + 2넴 + 합계
+  // 헤더 생성 (네임드 간 구분선 포함)
+  const nemHeaders = nemNames.map((nem, i) => {
+    const config = NEM_CONFIG[i + 1];
+    const header = `<th class="${config.class}" style="width:${nemWidths[nem]}px;">${config.icon} ${nem}</th>`;
+    const divider = i < nemNames.length - 1 ? '<th class="divider-header"></th>' : '';
+    return header + divider;
+  }).join('');
   
   container.innerHTML = `
-    <table class="schedule-table timeline-table" style="min-width:${tableMinWidth}px;">
-      <thead>
-        <tr>
-          <th class="time-header">시간</th>
-          <th class="nem1" style="width:${nem1Width}px;">1️⃣ 1넴</th>
-          <th class="nem2" style="width:${nem2Width}px;">2️⃣ 2넴</th>
-          <th class="total">합계</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="table-scroll-wrapper">
+      <table class="schedule-table timeline-table" style="min-width:${tableMinWidth}px;">
+        <thead>
+          <tr>
+            <th class="time-header">시간</th>
+            ${nemHeaders}
+            <th class="total">합계</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
   `;
   
-  // 첫 번째 행에 블록 컨테이너 삽입
+  // 첫 번째 행에 블록 컨테이너 삽입 + divider rowspan 설정
   const firstRow = container.querySelector('tbody tr');
-  const nem1Cell = firstRow.querySelector('.nem1-block-cell');
-  const nem2Cell = firstRow.querySelector('.nem2-block-cell');
+  nemNames.forEach(nem => {
+    const cell = firstRow.querySelector(`.nem-block-cell[data-nem="${nem}"]`);
+    if (cell) {
+      cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nemLanesMap[nem], laneWidth)}</div>`;
+      cell.setAttribute('rowspan', TIME_ORDER.length);
+    }
+  });
   
-  nem1Cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nem1Lanes, laneWidth)}</div>`;
-  nem1Cell.setAttribute('rowspan', TIME_ORDER.length);
+  // divider-cell도 rowspan 설정
+  firstRow.querySelectorAll('.divider-cell').forEach(cell => {
+    cell.setAttribute('rowspan', TIME_ORDER.length);
+  });
   
-  nem2Cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nem2Lanes, laneWidth)}</div>`;
-  nem2Cell.setAttribute('rowspan', TIME_ORDER.length);
-  
-  // 나머지 행의 블록 셀 제거
+  // 나머지 행의 블록 셀 + divider 제거
   const allRows = container.querySelectorAll('tbody tr');
   for (let i = 1; i < allRows.length; i++) {
-    const nem1 = allRows[i].querySelector('.nem1-block-cell');
-    const nem2 = allRows[i].querySelector('.nem2-block-cell');
-    if (nem1) nem1.remove();
-    if (nem2) nem2.remove();
+    allRows[i].querySelectorAll('.nem-block-cell, .divider-cell').forEach(cell => cell.remove());
   }
 }
 
-// 편집 모드 - 시간대별 네임드 지원
+// 편집 모드 - 동적 네임드 수 지원
 function renderEditMode(container, players) {
+  const namedCount = getCurrentRaidNamedCount();
+  const nemNames = Array.from({length: namedCount}, (_, i) => `${i+1}넴`);
+  
   // 플레이어에 시간 정보 추가
   const processedPlayers = players.map(p => {
     const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
@@ -1769,7 +2123,6 @@ function renderEditMode(container, players) {
     const result = [];
     processedPlayers.forEach(p => {
       if (seen.has(p.닉네임)) return;
-      // 이 플레이어가 해당 네임드에 한 번이라도 속하는지
       for (let t = p.startIdx; t <= p.endIdx; t++) {
         if (getPlayerNemAtTime(p, t) === nemType) {
           seen.add(p.닉네임);
@@ -1781,36 +2134,30 @@ function renderEditMode(container, players) {
     return result;
   };
   
-  const nem1Players = getUniquePlayersForNem('1넴');
-  const nem2Players = getUniquePlayersForNem('2넴');
-  
-  // 전역 레인 순서 업데이트 (새 플레이어 추가, 없어진 플레이어 제거)
-  const nem1Names = nem1Players.map(p => p.닉네임);
-  const nem2Names = nem2Players.map(p => p.닉네임);
-  
-  // 없어진 플레이어 제거
-  nem1LaneOrder = nem1LaneOrder.filter(n => nem1Names.includes(n));
-  nem2LaneOrder = nem2LaneOrder.filter(n => nem2Names.includes(n));
-  
-  // 새 플레이어 추가 (맨 뒤에)
-  nem1Names.forEach(n => { if (!nem1LaneOrder.includes(n)) nem1LaneOrder.push(n); });
-  nem2Names.forEach(n => { if (!nem2LaneOrder.includes(n)) nem2LaneOrder.push(n); });
-  
-  // 레인 순서 기준으로 플레이어 정렬
-  const sortedNem1 = nem1LaneOrder.map(n => nem1Players.find(p => p.닉네임 === n)).filter(Boolean);
-  const sortedNem2 = nem2LaneOrder.map(n => nem2Players.find(p => p.닉네임 === n)).filter(Boolean);
-  
-  // 플레이어별 레인 인덱스 매핑
-  const nem1LaneMap = {};
-  sortedNem1.forEach((p, idx) => nem1LaneMap[p.닉네임] = idx);
-  const nem2LaneMap = {};
-  sortedNem2.forEach((p, idx) => nem2LaneMap[p.닉네임] = idx);
-  
-  const nem1LaneCount = sortedNem1.length || 1;
-  const nem2LaneCount = sortedNem2.length || 1;
+  // 네임드별 플레이어 및 레인 정보
+  const nemData = {};
+  nemNames.forEach(nem => {
+    const players = getUniquePlayersForNem(nem);
+    const names = players.map(p => p.닉네임);
+    
+    // 전역 레인 순서 업데이트
+    nemLaneOrders[nem] = nemLaneOrders[nem].filter(n => names.includes(n));
+    names.forEach(n => { if (!nemLaneOrders[nem].includes(n)) nemLaneOrders[nem].push(n); });
+    
+    const sorted = nemLaneOrders[nem].map(n => players.find(p => p.닉네임 === n)).filter(Boolean);
+    const laneMap = {};
+    sorted.forEach((p, idx) => laneMap[p.닉네임] = idx);
+    
+    nemData[nem] = {
+      players,
+      laneMap,
+      laneCount: sorted.length || 1
+    };
+  });
   
   // 셀 렌더링
-  const renderCells = (timeIdx, nemType, laneMap, laneCount) => {
+  const renderCells = (timeIdx, nemType) => {
+    const { laneMap, laneCount } = nemData[nemType];
     if (laneCount === 0) return '<td class="players-cell"><span class="empty-cell">-</span></td>';
     
     const playersAtTime = getPlayersAtTimeForNem(timeIdx, nemType);
@@ -1851,32 +2198,47 @@ function renderEditMode(container, players) {
   
   const requiredCount = getCurrentRaidRequired();
   const rows = TIME_ORDER.map((_, idx) => {
-    const total = getActiveCount(idx, '1넴') + getActiveCount(idx, '2넴');
+    let total = 0;
+    nemNames.forEach(nem => total += getActiveCount(idx, nem));
     const highlightClass = total >= requiredCount ? 'highlight' : '';
+    
+    // 네임드별 셀 + 구분선 생성
+    const nemCellsHtml = nemNames.map((nem, i) => {
+      const cells = renderCells(idx, nem);
+      const divider = i < nemNames.length - 1 ? '<td class="divider-cell"></td>' : '';
+      return cells + divider;
+    }).join('');
+    
     return `
       <tr>
         <td class="time-cell">${TIME_LABELS[idx]}</td>
-        ${renderCells(idx, '1넴', nem1LaneMap, nem1LaneCount)}
-        <td class="divider-cell"></td>
-        ${renderCells(idx, '2넴', nem2LaneMap, nem2LaneCount)}
+        ${nemCellsHtml}
         <td class="total-cell ${highlightClass}">${total}명</td>
       </tr>
     `;
   }).join('');
   
+  // 헤더 생성
+  const nemHeadersHtml = nemNames.map((nem, i) => {
+    const config = NEM_CONFIG[i + 1];
+    const { laneCount } = nemData[nem];
+    const divider = i < nemNames.length - 1 ? '<th class="divider-header"></th>' : '';
+    return `<th class="${config.class}" colspan="${laneCount}">${config.icon} ${nem}</th>${divider}`;
+  }).join('');
+  
   container.innerHTML = `
-    <table class="schedule-table edit-table">
-      <thead>
-        <tr>
-          <th class="time-header">시간</th>
-          <th class="nem1" colspan="${nem1LaneCount}">1️⃣ 1넴</th>
-          <th class="divider-header"></th>
-          <th class="nem2" colspan="${nem2LaneCount}">2️⃣ 2넴</th>
-          <th class="total">합계</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="table-scroll-wrapper">
+      <table class="schedule-table edit-table">
+        <thead>
+          <tr>
+            <th class="time-header">시간</th>
+            ${nemHeadersHtml}
+            <th class="total">합계</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
   `;
 }
 
@@ -1947,12 +2309,13 @@ async function loadMyInfo() {
     if (result.success && result.data) {
       const d = result.data;
       
-      // 폼 필드 채우기
+      // 폼 필드 채우기 (순서 중요: 레이드 → 네임드 옵션 업데이트 → 네임드 선택)
       document.getElementById('job').value = d.직업 || '';
+      document.getElementById('raidType').value = d.레이드종류 || raidSettings[0]?.레이드명 || '';
+      updateNamedOptions(); // 레이드 변경 후 네임드 옵션 업데이트
       document.getElementById('named').value = d.네임드 || '';
       document.getElementById('startTime').value = d.시작시간 || '상관없음';
       document.getElementById('endTime').value = d.종료시간 || '상관없음';
-      document.getElementById('raidType').value = d.레이드종류 || '트라이팟';
       document.getElementById('note').value = d.참고사항 || '';
       
       // 못하는 요일 설정
@@ -2001,7 +2364,8 @@ async function submitForm() {
     '종료시간': document.getElementById('endTime').value,
     '못하는요일': getSelectedDays(),
     '레이드종류': document.getElementById('raidType').value,
-    '참고사항': document.getElementById('note').value || ''
+    '참고사항': document.getElementById('note').value || '',
+    'weekStart': currentWeekStart || getCurrentWeekStart()
   };
 
   const btn = document.querySelector('.submit-btn');
@@ -2072,6 +2436,12 @@ function undo() {
 function toggleEditMode() {
   const btn = document.getElementById('edit-mode-btn');
   
+  // 지난 주차면 편집 모드 진입 차단
+  if (currentMode === 'view' && !isCurrentWeek()) {
+    showToast('지난 주차는 편집할 수 없어요🌙');
+    return;
+  }
+  
   if (currentMode === 'view') {
     currentMode = 'edit';
     btn.textContent = '✏️ 편집 모드';
@@ -2131,15 +2501,14 @@ function moveSelectedTo(targetNem, targetLaneIdx = -1) {
   });
   
   // 레인 순서 업데이트
-  const targetOrder = targetNem === '1넴' ? nem1LaneOrder : nem2LaneOrder;
-  const otherOrder = targetNem === '1넴' ? nem2LaneOrder : nem1LaneOrder;
+  const targetOrder = nemLaneOrders[targetNem];
   
-  // 기존 위치에서 제거
+  // 기존 위치에서 제거 (모든 네임드에서)
   movingPlayers.forEach(name => {
-    const idx1 = nem1LaneOrder.indexOf(name);
-    if (idx1 !== -1) nem1LaneOrder.splice(idx1, 1);
-    const idx2 = nem2LaneOrder.indexOf(name);
-    if (idx2 !== -1) nem2LaneOrder.splice(idx2, 1);
+    Object.keys(nemLaneOrders).forEach(nem => {
+      const idx = nemLaneOrders[nem].indexOf(name);
+      if (idx !== -1) nemLaneOrders[nem].splice(idx, 1);
+    });
   });
   
   // 새 위치에 삽입
@@ -2331,11 +2700,11 @@ document.addEventListener('mousemove', (e) => {
     ghost.style.top = e.clientY + 10 + 'px';
     
     // 드롭 영역 하이라이트
-    document.querySelectorAll('.nem1, .nem2').forEach(el => el.classList.remove('drop-hover'));
+    document.querySelectorAll('.nem1, .nem2, .nem3, .nem4').forEach(el => el.classList.remove('drop-hover'));
     
     const target = document.elementFromPoint(e.clientX, e.clientY);
     if (target) {
-      const th = target.closest('th.nem1, th.nem2');
+      const th = target.closest('th.nem1, th.nem2, th.nem3, th.nem4');
       if (th) th.classList.add('drop-hover');
     }
   }
@@ -2383,17 +2752,20 @@ document.addEventListener('mouseup', (e) => {
     const ghost = document.getElementById('drag-ghost');
     ghost.style.display = 'none';
     
-    document.querySelectorAll('.nem1, .nem2').forEach(el => el.classList.remove('drop-hover'));
+    document.querySelectorAll('.nem1, .nem2, .nem3, .nem4').forEach(el => el.classList.remove('drop-hover'));
     
     // 드롭 영역 판별
     const target = document.elementFromPoint(e.clientX, e.clientY);
     if (target) {
       // 헤더에 드롭 → 맨 뒤에 추가
-      const th = target.closest('th.nem1, th.nem2');
+      const th = target.closest('th.nem1, th.nem2, th.nem3, th.nem4');
       if (th) {
-        const targetNem = th.classList.contains('nem1') ? '1넴' : '2넴';
-        moveSelectedTo(targetNem, -1);
-        return;
+        for (let i = 1; i <= 4; i++) {
+          if (th.classList.contains(`nem${i}`)) {
+            moveSelectedTo(`${i}넴`, -1);
+            return;
+          }
+        }
       }
       
       // 셀에 드롭 → 해당 레인 위치에 삽입
@@ -2401,16 +2773,35 @@ document.addEventListener('mouseup', (e) => {
       if (cell) {
         const row = cell.closest('tr');
         const cells = Array.from(row.children);
-        const dividerIdx = cells.findIndex(c => c.classList.contains('divider-cell'));
         const cellIdx = cells.indexOf(cell);
-        const targetNem = cellIdx < dividerIdx ? '1넴' : '2넴';
         
-        // 레인 인덱스 계산 (시간 셀 제외)
-        let laneIdx;
-        if (targetNem === '1넴') {
-          laneIdx = cellIdx - 1; // 시간 셀 제외
-        } else {
-          laneIdx = cellIdx - dividerIdx - 1; // 시간 + 1넴 셀들 + 디바이더 제외
+        // 디바이더 위치들 찾기
+        const dividerIdxs = cells.map((c, i) => c.classList.contains('divider-cell') ? i : -1).filter(i => i !== -1);
+        
+        // 셀이 어느 네임드 영역인지 결정
+        const namedCount = getCurrentRaidNamedCount();
+        let targetNem = '1넴';
+        let regionStart = 1; // 시간 셀 제외
+        
+        for (let i = 0; i < namedCount; i++) {
+          const regionEnd = i < dividerIdxs.length ? dividerIdxs[i] : cells.length - 1; // 합계 전까지
+          if (cellIdx >= regionStart && cellIdx < regionEnd) {
+            targetNem = `${i + 1}넴`;
+            break;
+          }
+          regionStart = regionEnd + 1; // 디바이더 다음
+        }
+        
+        // 레인 인덱스 계산
+        let laneIdx = 0;
+        let countStart = 1;
+        for (let i = 0; i < namedCount; i++) {
+          const regionEnd = i < dividerIdxs.length ? dividerIdxs[i] : cells.length - 1;
+          if (`${i + 1}넴` === targetNem) {
+            laneIdx = cellIdx - countStart;
+            break;
+          }
+          countStart = regionEnd + 1;
         }
         
         // 셀 내 X 좌표로 왼쪽/오른쪽 판단
@@ -2440,30 +2831,106 @@ function closeModal(modalId) {
 
 // 참가자 등록 모달
 function openRegisterModal() {
-  // 레이드 종류 select 업데이트
+  // 레이드 종류 select 업데이트 (현재 탭 기본 선택)
   const select = document.getElementById('raidType');
   select.innerHTML = raidSettings.map(r => 
-    `<option value="${r.레이드명}">${r.레이드명}</option>`
+    `<option value="${r.레이드명}" ${r.레이드명 === currentRaidType ? 'selected' : ''}>${r.레이드명}</option>`
   ).join('');
+  
+  // 초기 네임드 옵션 설정
+  updateNamedOptions();
+  
   openModal('register-modal');
+}
+
+// 네임드 드롭다운 동적 업데이트
+function updateNamedOptions() {
+  const raidName = document.getElementById('raidType').value;
+  const raid = raidSettings.find(r => r.레이드명 === raidName);
+  const namedCount = raid?.네임드수 || 2;
+  
+  const select = document.getElementById('named');
+  select.innerHTML = '<option value="">선택하세요</option>' + 
+    Array.from({length: namedCount}, (_, i) => 
+      `<option value="${i+1}넴">${i+1}넴</option>`
+    ).join('');
 }
 
 // 기간 없음 토글 (추가 모달)
 function toggleNewRaidPeriod() {
-  const noPeriod = document.getElementById('new-raid-no-period').checked;
-  document.getElementById('new-raid-period-group').style.display = noPeriod ? 'none' : 'block';
-  document.getElementById('new-raid-period-group2').style.display = noPeriod ? 'none' : 'block';
-  document.getElementById('new-raid-start').disabled = noPeriod;
-  document.getElementById('new-raid-end').disabled = noPeriod;
+  // 비활성화됨 (주차 시스템으로 대체)
 }
 
 // 기간 없음 토글 (설정 모달)
 function toggleEditRaidPeriod() {
-  const noPeriod = document.getElementById('edit-raid-no-period').checked;
-  document.getElementById('edit-raid-period-group').style.display = noPeriod ? 'none' : 'block';
-  document.getElementById('edit-raid-period-group2').style.display = noPeriod ? 'none' : 'block';
-  document.getElementById('edit-raid-start').disabled = noPeriod;
-  document.getElementById('edit-raid-end').disabled = noPeriod;
+  // 비활성화됨 (주차 시스템으로 대체)
+}
+
+// ========== 탭 드래그 순서 ==========
+let draggedTab = null;
+
+function onTabDragStart(e) {
+  draggedTab = e.target;
+  e.target.style.opacity = '0.5';
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onTabDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  
+  const target = e.target.closest('.raid-tab');
+  if (target && target !== draggedTab) {
+    const container = document.getElementById('raid-tabs');
+    const tabs = [...container.querySelectorAll('.raid-tab')];
+    const draggedIdx = tabs.indexOf(draggedTab);
+    const targetIdx = tabs.indexOf(target);
+    
+    if (draggedIdx < targetIdx) {
+      target.after(draggedTab);
+    } else {
+      target.before(draggedTab);
+    }
+  }
+}
+
+function onTabDrop(e) {
+  e.preventDefault();
+}
+
+function onTabDragEnd(e) {
+  e.target.style.opacity = '1';
+  draggedTab = null;
+  saveTabOrder();
+}
+
+async function saveTabOrder() {
+  const container = document.getElementById('raid-tabs');
+  const tabs = [...container.querySelectorAll('.raid-tab')];
+  
+  // 순서 업데이트
+  const updates = tabs.map((tab, idx) => ({
+    id: tab.dataset.id,
+    순서: idx + 1
+  }));
+  
+  // raidSettings 업데이트
+  updates.forEach(u => {
+    const raid = raidSettings.find(r => r.id === u.id);
+    if (raid) raid.순서 = u.순서;
+  });
+  
+  // 노션에 저장
+  for (const u of updates) {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateRaidOrder',
+        data: { id: u.id, 순서: u.순서 }
+      })
+    });
+  }
 }
 
 // 레이드 추가 모달
@@ -2471,21 +2938,6 @@ function openAddRaidModal() {
   document.getElementById('new-raid-name').value = '';
   document.getElementById('new-raid-named-count').value = '2';
   document.getElementById('new-raid-required').value = '8';
-  
-  // 기간 기본값 설정 (이번 주 금요일 ~ 일요일)
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=일, 1=월, ..., 5=금, 6=토
-  const daysUntilFriday = (5 - dayOfWeek + 7) % 7;
-  const friday = new Date(today);
-  friday.setDate(today.getDate() + daysUntilFriday);
-  const sunday = new Date(friday);
-  sunday.setDate(friday.getDate() + 2);
-  
-  document.getElementById('new-raid-start').value = friday.toISOString().split('T')[0];
-  document.getElementById('new-raid-end').value = sunday.toISOString().split('T')[0];
-  document.getElementById('new-raid-no-period').checked = false;
-  toggleNewRaidPeriod();
-  
   openModal('add-raid-modal');
 }
 
@@ -2493,19 +2945,17 @@ async function addNewRaid() {
   const name = document.getElementById('new-raid-name').value.trim();
   const namedCount = parseInt(document.getElementById('new-raid-named-count').value);
   const required = parseInt(document.getElementById('new-raid-required').value);
-  const noPeriod = document.getElementById('new-raid-no-period').checked;
-  const startDate = document.getElementById('new-raid-start').value;
-  const endDate = document.getElementById('new-raid-end').value;
   
   if (!name) {
-    alert('레이드 이름을 입력하세요');
+    showToast('레이드 이름을 입력해주세요🌙');
     return;
   }
   
-  // 기간 데이터 구성
-  let periodData = null;
-  if (!noPeriod && startDate && endDate) {
-    periodData = { start: startDate, end: endDate };
+  // 중복 이름 체크
+  const duplicate = raidSettings.find(r => r.레이드명 === name);
+  if (duplicate) {
+    showToast(`"${name}" 이름의 레이드가 이미 존재해요🌙`);
+    return;
   }
   
   try {
@@ -2518,23 +2968,21 @@ async function addNewRaid() {
           레이드명: name,
           네임드수: namedCount,
           필요인원: required,
-          활성화: true,
-          기간: periodData
+          활성화: true
         }
       })
     });
     
-    const result = await response.json();
-    if (result.success) {
-      alert('레이드가 추가되었습니다');
+    if (response.ok) {
+      showToast('레이드가 추가되었어요🌙', 'success');
       closeModal('add-raid-modal');
       await loadRaidSettings();
       renderRaidTabs();
     } else {
-      alert('추가 실패: ' + (result.message || '알 수 없는 오류'));
+      showToast('추가에 실패했어요🌙', 'error');
     }
   } catch (error) {
-    alert('추가 실패: ' + error.message);
+    showToast('추가에 실패했어요🌙', 'error');
   }
 }
 
@@ -2564,21 +3012,6 @@ function loadRaidSettingsForEdit() {
     document.getElementById('edit-raid-name').value = raid.레이드명;
     document.getElementById('edit-raid-named-count').value = raid.네임드수 || 2;
     document.getElementById('edit-raid-required').value = raid.필요인원 || 8;
-    document.getElementById('edit-raid-active').value = raid.활성화 !== false ? 'true' : 'false';
-    
-    // 기간 필드 로드
-    const hasPeriod = raid.기간 && raid.기간.start;
-    document.getElementById('edit-raid-no-period').checked = !hasPeriod;
-    
-    if (hasPeriod) {
-      document.getElementById('edit-raid-start').value = raid.기간.start || '';
-      document.getElementById('edit-raid-end').value = raid.기간.end || '';
-    } else {
-      document.getElementById('edit-raid-start').value = '';
-      document.getElementById('edit-raid-end').value = '';
-    }
-    
-    toggleEditRaidPeriod();
   }
 }
 
@@ -2587,20 +3020,17 @@ async function saveRaidSettings() {
   const name = document.getElementById('edit-raid-name').value.trim();
   const namedCount = parseInt(document.getElementById('edit-raid-named-count').value);
   const required = parseInt(document.getElementById('edit-raid-required').value);
-  const active = document.getElementById('edit-raid-active').value === 'true';
-  const noPeriod = document.getElementById('edit-raid-no-period').checked;
-  const startDate = document.getElementById('edit-raid-start').value;
-  const endDate = document.getElementById('edit-raid-end').value;
   
   if (!name) {
-    alert('레이드 이름을 입력하세요');
+    showToast('레이드 이름을 입력해주세요🌙');
     return;
   }
   
-  // 기간 데이터 구성
-  let periodData = null;
-  if (!noPeriod && startDate && endDate) {
-    periodData = { start: startDate, end: endDate };
+  // 중복 이름 체크 (자기 자신 제외)
+  const duplicate = raidSettings.find(r => r.레이드명 === name && r.id !== selectedId);
+  if (duplicate) {
+    showToast(`"${name}" 이름의 레이드가 이미 존재해요🌙`);
+    return;
   }
   
   try {
@@ -2614,24 +3044,23 @@ async function saveRaidSettings() {
           레이드명: name,
           네임드수: namedCount,
           필요인원: required,
-          활성화: active,
-          기간: periodData
+          활성화: true,
+          기간: null
         }
       })
     });
     
-    const result = await response.json();
-    if (result.success) {
-      alert('설정이 저장되었습니다');
+    if (response.ok) {
+      showToast('설정이 저장되었어요🌙', 'success');
       closeModal('raid-settings-modal');
       await loadRaidSettings();
       renderRaidTabs();
       renderSchedule();
     } else {
-      alert('저장 실패: ' + (result.message || '알 수 없는 오류'));
+      showToast('저장에 실패했어요🌙', 'error');
     }
   } catch (error) {
-    alert('저장 실패: ' + error.message);
+    showToast('저장에 실패했어요🌙', 'error');
   }
 }
 
@@ -2639,7 +3068,8 @@ async function deleteRaid() {
   const selectedId = document.getElementById('settings-raid-select').value;
   const raid = raidSettings.find(r => r.id === selectedId);
   
-  if (!confirm(`"${raid.레이드명}" 레이드를 삭제하시겠습니까?`)) return;
+  const confirmed = await showConfirm(`"${raid.레이드명}" 레이드를 삭제할까요?🌙`);
+  if (!confirmed) return;
   
   try {
     const response = await fetch(WEBHOOK_URL, {
@@ -2653,15 +3083,15 @@ async function deleteRaid() {
     
     const result = await response.json();
     if (result.success) {
-      alert('레이드가 삭제되었습니다');
+      showToast('레이드가 삭제되었어요🌙', 'success');
       closeModal('raid-settings-modal');
       await loadRaidSettings();
       renderRaidTabs();
     } else {
-      alert('삭제 실패: ' + (result.message || '알 수 없는 오류'));
+      showToast('삭제에 실패했어요🌙', 'error');
     }
   } catch (error) {
-    alert('삭제 실패: ' + error.message);
+    showToast('삭제에 실패했어요🌙', 'error');
   }
 }
 
