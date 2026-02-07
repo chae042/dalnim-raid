@@ -267,6 +267,45 @@
     font-weight: 700;
   }
 
+  .raid-tab.expired {
+    opacity: 0.5;
+    background: #333;
+    color: #666;
+    border-color: #444;
+  }
+
+  .raid-tab.expired:hover {
+    border-color: #555;
+    color: #888;
+  }
+
+  .raid-tab.expired.active {
+    background: #555;
+    color: #888;
+    border-color: #666;
+  }
+
+  /* 만료된 레이드 전체 회색화 */
+  .view-expired #schedule-view,
+  .view-expired #notes-section,
+  .view-expired .day-tabs,
+  .view-expired .mode-toggle,
+  .view-expired .legend {
+    filter: grayscale(1);
+    opacity: 0.6;
+  }
+
+  .expired-notice {
+    text-align: center;
+    padding: 12px;
+    background: rgba(255, 107, 107, 0.15);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: 8px;
+    color: #ff6b6b;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+
   /* Mode Toggle */
   .mode-toggle {
     display: flex;
@@ -1028,6 +1067,11 @@
       <button class="raid-control-btn" onclick="openRaidSettingsModal()" title="레이드 설정">⚙️</button>
     </div>
 
+    <!-- 만료 레이드 안내 -->
+    <div class="expired-notice" id="expired-notice" style="display:none;">
+      ⚠️ 기간이 종료된 레이드입니다 (7일 후 자동 숨김)
+    </div>
+
     <!-- 편집 모드 버튼 -->
     <div class="edit-mode-bar">
       <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">✅ 편집 완료</button>
@@ -1210,6 +1254,19 @@
           <label>필요 인원 (하이라이트 기준)</label>
           <input type="number" id="new-raid-required" value="8" min="1" max="40">
         </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="new-raid-no-period" onchange="toggleNewRaidPeriod()"> 기간 없음 (상시)
+          </label>
+        </div>
+        <div class="form-group" id="new-raid-period-group">
+          <label>시작일</label>
+          <input type="date" id="new-raid-start">
+        </div>
+        <div class="form-group" id="new-raid-period-group2">
+          <label>종료일</label>
+          <input type="date" id="new-raid-end">
+        </div>
       </div>
       <div class="modal-footer">
         <button class="modal-btn secondary" onclick="closeModal('add-raid-modal')">취소</button>
@@ -1253,6 +1310,19 @@
             <option value="true">활성화</option>
             <option value="false">비활성화 (숨김)</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="edit-raid-no-period" onchange="toggleEditRaidPeriod()"> 기간 없음 (상시)
+          </label>
+        </div>
+        <div class="form-group" id="edit-raid-period-group">
+          <label>시작일</label>
+          <input type="date" id="edit-raid-start">
+        </div>
+        <div class="form-group" id="edit-raid-period-group2">
+          <label>종료일</label>
+          <input type="date" id="edit-raid-end">
         </div>
       </div>
       <div class="modal-footer">
@@ -1326,6 +1396,20 @@ function selectRaidType(type) {
   document.querySelectorAll('.raid-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.raid === type);
   });
+  
+  // 만료 체크 → 회색화 토글
+  const raid = raidSettings.find(r => r.레이드명 === type);
+  const viewPanel = document.getElementById('view-panel');
+  const expiredNotice = document.getElementById('expired-notice');
+  
+  if (raid && isRaidExpired(raid)) {
+    viewPanel.classList.add('view-expired');
+    if (expiredNotice) expiredNotice.style.display = 'block';
+  } else {
+    viewPanel.classList.remove('view-expired');
+    if (expiredNotice) expiredNotice.style.display = 'none';
+  }
+  
   renderDayTabs();
   renderSchedule();
   renderNotes();
@@ -1379,7 +1463,11 @@ async function loadRaidSettings() {
         return {
           id: item.id,
           레이드명: props.레이드명?.title?.[0]?.text?.content || '',
-          레이드종류: props.레이드종류?.select?.name || ''
+          레이드종류: props.레이드종류?.select?.name || '',
+          네임드수: props.네임드수?.number || 2,
+          필요인원: props.필요인원?.number || 8,
+          활성화: props.활성화?.checkbox !== false,
+          기간: props.기간?.date || null  // { start: "2025-01-01", end: "2025-01-31" }
         };
       });
       
@@ -1401,14 +1489,40 @@ async function loadRaidSettings() {
   }
 }
 
+// 레이드 만료 체크 (기간 종료일 지남)
+function isRaidExpired(raid) {
+  if (!raid.기간 || !raid.기간.end) return false;  // 기간없음 = 만료 안됨
+  const endDate = new Date(raid.기간.end);
+  endDate.setHours(23, 59, 59, 999);  // 종료일 끝까지
+  return endDate < new Date();
+}
+
+// 레이드 숨김 체크 (만료 후 7일 지남)
+function isRaidHidden(raid) {
+  if (!raid.기간 || !raid.기간.end) return false;
+  const endDate = new Date(raid.기간.end);
+  endDate.setDate(endDate.getDate() + 7);  // +7일
+  endDate.setHours(23, 59, 59, 999);
+  return endDate < new Date();
+}
+
 // 레이드 탭 렌더링
 function renderRaidTabs() {
   const container = document.getElementById('raid-tabs');
-  container.innerHTML = raidSettings.map((r, idx) => `
-    <div class="raid-tab ${r.레이드명 === currentRaidType ? 'active' : ''}" 
+  
+  // 숨김 처리 안 된 것만 표시
+  const visibleRaids = raidSettings.filter(r => !isRaidHidden(r));
+  
+  container.innerHTML = visibleRaids.map((r, idx) => {
+    const expired = isRaidExpired(r);
+    const expiredClass = expired ? 'expired' : '';
+    const activeClass = r.레이드명 === currentRaidType ? 'active' : '';
+    
+    return `<div class="raid-tab ${activeClass} ${expiredClass}" 
          data-raid="${r.레이드명}" 
-         onclick="selectRaidType('${r.레이드명}')">${r.레이드명}</div>
-  `).join('');
+         data-expired="${expired}"
+         onclick="selectRaidType('${r.레이드명}')">${r.레이드명}</div>`;
+  }).join('');
 }
 
 // 플레이어 목록 불러오기
@@ -2334,11 +2448,44 @@ function openRegisterModal() {
   openModal('register-modal');
 }
 
+// 기간 없음 토글 (추가 모달)
+function toggleNewRaidPeriod() {
+  const noPeriod = document.getElementById('new-raid-no-period').checked;
+  document.getElementById('new-raid-period-group').style.display = noPeriod ? 'none' : 'block';
+  document.getElementById('new-raid-period-group2').style.display = noPeriod ? 'none' : 'block';
+  document.getElementById('new-raid-start').disabled = noPeriod;
+  document.getElementById('new-raid-end').disabled = noPeriod;
+}
+
+// 기간 없음 토글 (설정 모달)
+function toggleEditRaidPeriod() {
+  const noPeriod = document.getElementById('edit-raid-no-period').checked;
+  document.getElementById('edit-raid-period-group').style.display = noPeriod ? 'none' : 'block';
+  document.getElementById('edit-raid-period-group2').style.display = noPeriod ? 'none' : 'block';
+  document.getElementById('edit-raid-start').disabled = noPeriod;
+  document.getElementById('edit-raid-end').disabled = noPeriod;
+}
+
 // 레이드 추가 모달
 function openAddRaidModal() {
   document.getElementById('new-raid-name').value = '';
   document.getElementById('new-raid-named-count').value = '2';
   document.getElementById('new-raid-required').value = '8';
+  
+  // 기간 기본값 설정 (이번 주 금요일 ~ 일요일)
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=일, 1=월, ..., 5=금, 6=토
+  const daysUntilFriday = (5 - dayOfWeek + 7) % 7;
+  const friday = new Date(today);
+  friday.setDate(today.getDate() + daysUntilFriday);
+  const sunday = new Date(friday);
+  sunday.setDate(friday.getDate() + 2);
+  
+  document.getElementById('new-raid-start').value = friday.toISOString().split('T')[0];
+  document.getElementById('new-raid-end').value = sunday.toISOString().split('T')[0];
+  document.getElementById('new-raid-no-period').checked = false;
+  toggleNewRaidPeriod();
+  
   openModal('add-raid-modal');
 }
 
@@ -2346,10 +2493,19 @@ async function addNewRaid() {
   const name = document.getElementById('new-raid-name').value.trim();
   const namedCount = parseInt(document.getElementById('new-raid-named-count').value);
   const required = parseInt(document.getElementById('new-raid-required').value);
+  const noPeriod = document.getElementById('new-raid-no-period').checked;
+  const startDate = document.getElementById('new-raid-start').value;
+  const endDate = document.getElementById('new-raid-end').value;
   
   if (!name) {
     alert('레이드 이름을 입력하세요');
     return;
+  }
+  
+  // 기간 데이터 구성
+  let periodData = null;
+  if (!noPeriod && startDate && endDate) {
+    periodData = { start: startDate, end: endDate };
   }
   
   try {
@@ -2362,7 +2518,8 @@ async function addNewRaid() {
           레이드명: name,
           네임드수: namedCount,
           필요인원: required,
-          활성화: true
+          활성화: true,
+          기간: periodData
         }
       })
     });
@@ -2408,6 +2565,20 @@ function loadRaidSettingsForEdit() {
     document.getElementById('edit-raid-named-count').value = raid.네임드수 || 2;
     document.getElementById('edit-raid-required').value = raid.필요인원 || 8;
     document.getElementById('edit-raid-active').value = raid.활성화 !== false ? 'true' : 'false';
+    
+    // 기간 필드 로드
+    const hasPeriod = raid.기간 && raid.기간.start;
+    document.getElementById('edit-raid-no-period').checked = !hasPeriod;
+    
+    if (hasPeriod) {
+      document.getElementById('edit-raid-start').value = raid.기간.start || '';
+      document.getElementById('edit-raid-end').value = raid.기간.end || '';
+    } else {
+      document.getElementById('edit-raid-start').value = '';
+      document.getElementById('edit-raid-end').value = '';
+    }
+    
+    toggleEditRaidPeriod();
   }
 }
 
@@ -2417,10 +2588,19 @@ async function saveRaidSettings() {
   const namedCount = parseInt(document.getElementById('edit-raid-named-count').value);
   const required = parseInt(document.getElementById('edit-raid-required').value);
   const active = document.getElementById('edit-raid-active').value === 'true';
+  const noPeriod = document.getElementById('edit-raid-no-period').checked;
+  const startDate = document.getElementById('edit-raid-start').value;
+  const endDate = document.getElementById('edit-raid-end').value;
   
   if (!name) {
     alert('레이드 이름을 입력하세요');
     return;
+  }
+  
+  // 기간 데이터 구성
+  let periodData = null;
+  if (!noPeriod && startDate && endDate) {
+    periodData = { start: startDate, end: endDate };
   }
   
   try {
@@ -2434,7 +2614,8 @@ async function saveRaidSettings() {
           레이드명: name,
           네임드수: namedCount,
           필요인원: required,
-          활성화: active
+          활성화: active,
+          기간: periodData
         }
       })
     });
