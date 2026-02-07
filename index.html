@@ -380,16 +380,14 @@
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
-    min-width: 320px;
   }
 
   .schedule-table th {
     background: #16213e;
-    padding: 12px 8px;
-    font-size: 16px;
+    padding: 16px 12px;
+    font-size: 18px;
     font-weight: 700;
     border-bottom: 2px solid #2a2a4a;
-    white-space: nowrap;
   }
 
   .schedule-table th.nem1 { color: #74b9ff; }
@@ -403,12 +401,11 @@
   }
 
   .time-cell {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     color: #666;
     text-align: center;
-    min-width: 50px;
-    white-space: nowrap;
+    width: 80px;
   }
 
   .players-cell {
@@ -424,10 +421,9 @@
   .total-cell {
     text-align: center;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 16px;
     color: #888;
-    min-width: 45px;
-    white-space: nowrap;
+    width: 60px;
   }
 
   .total-cell.highlight {
@@ -441,7 +437,7 @@
   }
 
   .timeline-table .time-header {
-    min-width: 50px;
+    width: 70px;
   }
 
   .timeline-table .nem1-block-cell,
@@ -454,6 +450,14 @@
   .blocks-container {
     position: relative;
     width: 100%;
+    /* 시간대별 가로 라인 (44px 간격) */
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 43px,
+      #2a2a4a 43px,
+      #2a2a4a 44px
+    );
   }
 
   .timeline-block {
@@ -463,13 +467,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     gap: 2px;
     box-sizing: border-box;
     transition: filter 0.15s;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .timeline-block:hover {
@@ -977,7 +979,7 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* 모바일 반응형 */
+  /* 모바일 반응형 - 표 외부만 조절 */
   @media (max-width: 768px) {
     .container {
       padding: 12px;
@@ -1011,31 +1013,6 @@
       font-size: 13px;
     }
 
-    .timeline-block {
-      font-size: 11px;
-      padding: 4px;
-    }
-
-    .timeline-block .job-icon {
-      font-size: 10px;
-    }
-
-    .schedule-table th,
-    .schedule-table td {
-      padding: 4px;
-      font-size: 12px;
-    }
-
-    .time-cell {
-      min-width: 45px;
-      font-size: 11px;
-    }
-
-    .total-cell {
-      min-width: 40px;
-      font-size: 11px;
-    }
-
     .legend {
       flex-wrap: wrap;
       gap: 8px;
@@ -1053,19 +1030,17 @@
       right: 16px;
     }
 
-    .edit-mode-btn {
-      padding: 6px 12px;
-      font-size: 12px;
+    /* 모바일에서 편집모드 숨김 */
+    .edit-mode-bar {
+      display: none;
     }
 
     .move-controls {
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px;
+      display: none;
     }
 
-    .hint-text {
-      font-size: 10px;
+    .edit-hint {
+      display: none !important;
     }
   }
 
@@ -1679,9 +1654,7 @@ function renderViewMode(container, players) {
     </tr>`;
   }).join('');
   
-  // 화면 크기에 따라 레인 너비 조절
-  const isMobile = window.innerWidth < 768;
-  const laneWidth = isMobile ? 60 : 80;
+  const laneWidth = 80;
   const nem1Width = Math.max(nem1Lanes.laneCount, 1) * laneWidth;
   const nem2Width = Math.max(nem2Lanes.laneCount, 1) * laneWidth;
   const totalHeight = TIME_ORDER.length * ROW_HEIGHT;
