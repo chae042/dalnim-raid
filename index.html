@@ -390,8 +390,15 @@
     border-bottom: 2px solid #2a2a4a;
   }
 
-  .schedule-table th.nem1 { color: #74b9ff; }
-  .schedule-table th.nem2 { color: #ff7675; }
+  .schedule-table th.nem1 { 
+    color: #74b9ff; 
+    background: rgba(116, 185, 255, 0.1);
+  }
+  .schedule-table th.nem2 { 
+    color: #ff7675; 
+    border-left: 3px solid #ffd70050;
+    background: rgba(255, 118, 117, 0.1);
+  }
   .schedule-table th.total { color: #ffd700; }
 
   .schedule-table td {
@@ -445,6 +452,16 @@
     padding: 0;
     vertical-align: top;
     position: relative;
+  }
+
+  /* 1넴 2넴 구분 */
+  .timeline-table .nem1-block-cell {
+    background: rgba(116, 185, 255, 0.05);
+  }
+
+  .timeline-table .nem2-block-cell {
+    border-left: 3px solid #ffd70050;
+    background: rgba(255, 118, 117, 0.05);
   }
 
   .blocks-container {
