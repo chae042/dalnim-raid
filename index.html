@@ -1350,7 +1350,7 @@
 <div id="toast-container"></div>
 
 <!-- 커스텀 확인 모달 -->
-<div id="confirm-modal" class="modal" style="display:none;">
+<div id="confirm-modal" class="modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
   <div class="modal-content confirm-modal-content">
     <div class="confirm-icon">🌙</div>
     <p id="confirm-message"></p>
@@ -1414,7 +1414,7 @@
       <span class="hint-text">드래그하여 네임드 간 이동 | Delete: 비활성화 | Ctrl+Del: 선택 외 비활성화 | Ctrl+Z: 되돌리기</span>
       <button class="move-btn cancel" onclick="clearSelection()">선택 취소</button>
     </div>
-    <div class="edit-hint" id="edit-hint" style="display:none;">💡 드래그 또는 Ctrl+클릭으로 칩 선택</div>
+    <div class="edit-hint" id="edit-hint" style="display:none;">💡 클릭으로 칩 선택, 드래그로 여러 개 선택, 빈 곳 클릭으로 해제</div>
 
     <!-- 선택 박스 오버레이 -->
     <div class="selection-box" id="selection-box"></div>
@@ -1642,7 +1642,7 @@
 
 <script>
 const WEBHOOK_URL = 'https://n8n-production-f0a7.up.railway.app/webhook/raid';
-const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const DAYS = ['수', '목', '금', '토', '일', '월', '화'];
 const TIME_ORDER = ['PM 6', 'PM 7', 'PM 8', 'PM 9', 'PM 10', 'PM 11', 'AM 12', 'AM 1', 'AM 2'];
 const TIME_LABELS = ['18시', '19시', '20시', '21시', '22시', '23시', '00시', '01시', '02시'];
 
@@ -1660,7 +1660,7 @@ const JOB_MAP = {
 let allPlayers = [];
 let raidSettings = [];
 let raidIdToName = {};
-let currentDay = '금';
+let currentDay = '수';
 let currentRaidType = '';
 let currentWeekStart = null;
 
@@ -1708,6 +1708,16 @@ function getCurrentWeekStart() {
   const m = String(wed.getMonth() + 1).padStart(2, '0');
   const d = String(wed.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+// 주차 종료일(화요일) 계산 - 시작일 + 6일
+function getWeekEnd(weekStart) {
+  const [y, m, d] = weekStart.split('-').map(Number);
+  const end = new Date(y, m - 1, d + 6);
+  const ey = end.getFullYear();
+  const em = String(end.getMonth() + 1).padStart(2, '0');
+  const ed = String(end.getDate()).padStart(2, '0');
+  return `${ey}-${em}-${ed}`;
 }
 
 // 주차 표시용 포맷
@@ -1847,6 +1857,8 @@ async function initViewPanel() {
 // 레이드 타입 선택
 function selectRaidType(type) {
   currentRaidType = type;
+  localStorage.setItem('dalnim_lastRaid', type);
+  
   document.querySelectorAll('.raid-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.raid === type);
   });
@@ -1864,14 +1876,60 @@ function selectRaidType(type) {
     if (expiredNotice) expiredNotice.style.display = 'none';
   }
   
+  // 저장된 순서 로드
+  loadNemLaneOrders(raid);
+  
   renderDayTabs();
   renderSchedule();
   renderNotes();
 }
 
+// 레이드별 네임드 순서 로드
+function loadNemLaneOrders(raid) {
+  nemLaneOrders = { '1넴': [], '2넴': [], '3넴': [], '4넴': [] };
+  if (!raid) return;
+  
+  for (let i = 1; i <= 4; i++) {
+    const orderStr = raid[`${i}넴순서`] || '';
+    if (orderStr) {
+      nemLaneOrders[`${i}넴`] = orderStr.split(',').map(s => s.trim()).filter(Boolean);
+    }
+  }
+}
+
+// 네임드 순서 저장
+async function saveNemLaneOrders() {
+  const raid = raidSettings.find(r => r.레이드명 === currentRaidType);
+  if (!raid || !raid.id) return;
+  
+  const orderData = {};
+  for (let i = 1; i <= 4; i++) {
+    orderData[`${i}넴순서`] = nemLaneOrders[`${i}넴`].join(',');
+  }
+  
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'updateRaidOrder', 
+        id: raid.id,
+        data: orderData
+      })
+    });
+    
+    // 로컬 raidSettings도 업데이트
+    Object.assign(raid, orderData);
+  } catch (error) {
+    console.error('순서 저장 실패:', error);
+  }
+}
+
 // 요일 선택
 function selectDay(day) {
   currentDay = day;
+  localStorage.setItem('dalnim_lastDay', day);
+  
   document.querySelectorAll('.day-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.day === day);
   });
@@ -1935,9 +1993,20 @@ async function loadRaidSettings() {
         raidIdToName[r.id] = r.레이드명;
       });
       
-      // 첫 번째를 기본값으로
+      // 저장된 마지막 탭 복원 또는 첫 번째를 기본값
       if (raidSettings.length > 0 && !currentRaidType) {
-        currentRaidType = raidSettings[0].레이드명;
+        const savedRaid = localStorage.getItem('dalnim_lastRaid');
+        const savedDay = localStorage.getItem('dalnim_lastDay');
+        
+        if (savedRaid && raidSettings.find(r => r.레이드명 === savedRaid)) {
+          currentRaidType = savedRaid;
+        } else {
+          currentRaidType = raidSettings[0].레이드명;
+        }
+        
+        if (savedDay && DAYS.includes(savedDay)) {
+          currentDay = savedDay;
+        }
       }
       
       renderRaidTabs();
@@ -2300,9 +2369,19 @@ function renderEditMode(container, players) {
   const nemData = {};
   nemNames.forEach(nem => {
     const players = getUniquePlayersForNem(nem);
+    const names = players.map(p => p.닉네임);
     
-    // 닉네임 가나다순 고정 레인
-    const sorted = [...players].sort((a, b) => a.닉네임.localeCompare(b.닉네임, 'ko'));
+    // nemLaneOrders 기반 정렬 (저장된 순서 우선, 새 플레이어는 끝에)
+    names.forEach(n => {
+      if (!nemLaneOrders[nem].includes(n)) nemLaneOrders[nem].push(n);
+    });
+    
+    // 저장된 순서대로 정렬
+    const sorted = nemLaneOrders[nem]
+      .filter(n => names.includes(n))
+      .map(n => players.find(p => p.닉네임 === n))
+      .filter(Boolean);
+    
     const laneMap = {};
     sorted.forEach((p, idx) => laneMap[p.닉네임] = idx);
     
@@ -2514,6 +2593,7 @@ async function submitForm() {
     return;
   }
 
+  const weekStart = currentWeekStart || getCurrentWeekStart();
   const data = {
     '닉네임': nickname,
     '직업': job,
@@ -2523,7 +2603,8 @@ async function submitForm() {
     '못하는요일': getSelectedDays(),
     '레이드종류': document.getElementById('raidType').value,
     '참고사항': document.getElementById('note').value || '',
-    'weekStart': currentWeekStart || getCurrentWeekStart()
+    'weekStart': weekStart,
+    'weekEnd': getWeekEnd(weekStart)
   };
 
   const btn = document.querySelector('.submit-btn');
@@ -2550,10 +2631,11 @@ async function submitForm() {
     
     if (result.success || response.ok) {
       showMessage('register-message', 'success', '저장되었습니다!');
-      setTimeout(() => {
+      setTimeout(async () => {
         closeModal('register-modal');
-        loadScheduleData();
-      }, 1000);
+        await loadPlayerList(); // 실시간 반영
+        renderSchedule();
+      }, 500);
     } else {
       showMessage('register-message', 'error', '저장 실패: ' + (result.message || '알 수 없는 오류'));
     }
@@ -2705,6 +2787,9 @@ function moveSelectedTo(targetNem, targetLaneIdx = -1) {
     }
   });
   
+  // 순서 저장
+  saveNemLaneOrders();
+  
   clearSelection();
   renderSchedule();
 }
@@ -2817,39 +2902,32 @@ document.addEventListener('pointerdown', (e) => {
   
   const clickedChip = e.target.closest('.player-chip');
   
-  // 칩 클릭 (Ctrl 없이도 선택/토글)
+  // 칩 클릭 - 그냥 클릭으로 토글
   if (clickedChip) {
     const nickname = clickedChip.dataset.player;
     const timeIdx = clickedChip.dataset.time;
     const key = `${nickname}|${timeIdx}`;
     
-    if (e.ctrlKey || e.metaKey) {
-      // Ctrl+클릭: 토글
-      if (selectedChips.has(key)) {
+    if (clickedChip.classList.contains('selected')) {
+      // 선택된 칩 클릭
+      if (e.shiftKey) {
+        // Shift+클릭: 선택 해제
         selectedChips.delete(key);
         clickedChip.classList.remove('selected');
       } else {
-        selectedChips.add(key);
-        clickedChip.classList.add('selected');
+        // 일반 클릭: 드래그 준비 (pointerup에서 토글 처리)
+        isDragging = true;
+        const uniquePlayers = new Set();
+        selectedChips.forEach(k => uniquePlayers.add(k.split('|')[0]));
+        
+        const ghost = document.getElementById('drag-ghost');
+        ghost.textContent = `${uniquePlayers.size}명 이동`;
+        ghost.style.left = e.clientX + 10 + 'px';
+        ghost.style.top = e.clientY + 10 + 'px';
+        ghost.style.display = 'block';
       }
-    } else if (clickedChip.classList.contains('selected') && selectedChips.size > 0) {
-      // 이미 선택된 칩 드래그 시작
-      isDragging = true;
-      const uniquePlayers = new Set();
-      selectedChips.forEach(k => uniquePlayers.add(k.split('|')[0]));
-      
-      const ghost = document.getElementById('drag-ghost');
-      ghost.textContent = `${uniquePlayers.size}명 이동`;
-      ghost.style.left = e.clientX + 10 + 'px';
-      ghost.style.top = e.clientY + 10 + 'px';
-      ghost.style.display = 'block';
     } else {
-      // 일반 클릭: 기존 선택 해제 + 새로 선택
-      selectedChips.forEach(k => {
-        const [n, t] = k.split('|');
-        document.querySelectorAll(`.player-chip[data-player="${n}"][data-time="${t}"]`).forEach(c => c.classList.remove('selected'));
-      });
-      selectedChips.clear();
+      // 선택 안 된 칩 클릭 = 선택 추가 (토글)
       selectedChips.add(key);
       clickedChip.classList.add('selected');
     }
@@ -2917,8 +2995,11 @@ document.addEventListener('pointerup', (e) => {
     const boxRect = box.getBoundingClientRect();
     box.style.display = 'none';
     
-    // 박스 크기가 너무 작으면 무시
-    if (boxRect.width < 5 && boxRect.height < 5) return;
+    // 박스 크기가 너무 작으면 = 빈 공간 클릭 = 전체 선택 해제
+    if (boxRect.width < 5 && boxRect.height < 5) {
+      clearSelection();
+      return;
+    }
     
     // 박스 안의 칩들만 선택 (같은 이름이라도 전체 X)
     document.querySelectorAll('.edit-table .player-chip').forEach(chip => {
