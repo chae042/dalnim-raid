@@ -380,14 +380,16 @@
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    min-width: 320px;
   }
 
   .schedule-table th {
     background: #16213e;
-    padding: 16px 12px;
-    font-size: 18px;
+    padding: 12px 8px;
+    font-size: 16px;
     font-weight: 700;
     border-bottom: 2px solid #2a2a4a;
+    white-space: nowrap;
   }
 
   .schedule-table th.nem1 { color: #74b9ff; }
@@ -401,11 +403,12 @@
   }
 
   .time-cell {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: #666;
     text-align: center;
-    width: 80px;
+    min-width: 50px;
+    white-space: nowrap;
   }
 
   .players-cell {
@@ -421,9 +424,10 @@
   .total-cell {
     text-align: center;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
     color: #888;
-    width: 60px;
+    min-width: 45px;
+    white-space: nowrap;
   }
 
   .total-cell.highlight {
@@ -437,7 +441,7 @@
   }
 
   .timeline-table .time-header {
-    width: 70px;
+    min-width: 50px;
   }
 
   .timeline-table .nem1-block-cell,
@@ -459,11 +463,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     gap: 2px;
     box-sizing: border-box;
     transition: filter 0.15s;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .timeline-block:hover {
@@ -963,6 +969,131 @@
 
   .modal-btn.danger:hover {
     background: #ef4444;
+  }
+
+  /* 스케줄 뷰 스크롤 */
+  #schedule-view {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    .container {
+      padding: 12px;
+    }
+
+    .header h1 {
+      font-size: 18px;
+    }
+
+    .header h2 {
+      font-size: 20px;
+    }
+
+    .day-tabs {
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+    }
+
+    .day-tab {
+      padding: 8px 12px;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .raid-tabs-container {
+      flex-wrap: wrap;
+    }
+
+    .raid-tab {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .timeline-block {
+      font-size: 11px;
+      padding: 4px;
+    }
+
+    .timeline-block .job-icon {
+      font-size: 10px;
+    }
+
+    .schedule-table th,
+    .schedule-table td {
+      padding: 4px;
+      font-size: 12px;
+    }
+
+    .time-cell {
+      min-width: 45px;
+      font-size: 11px;
+    }
+
+    .total-cell {
+      min-width: 40px;
+      font-size: 11px;
+    }
+
+    .legend {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .legend-item {
+      font-size: 11px;
+    }
+
+    .floating-btn {
+      width: 48px;
+      height: 48px;
+      font-size: 20px;
+      bottom: 16px;
+      right: 16px;
+    }
+
+    .edit-mode-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .move-controls {
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .hint-text {
+      font-size: 10px;
+    }
+  }
+
+  /* 더 작은 화면 */
+  @media (max-width: 480px) {
+    .header h2 {
+      font-size: 18px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+    }
+
+    .day-tab {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .raid-tab {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .raid-control-btn {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+    }
   }
 </style>
 </head>
@@ -1548,7 +1679,9 @@ function renderViewMode(container, players) {
     </tr>`;
   }).join('');
   
-  const laneWidth = 80;
+  // 화면 크기에 따라 레인 너비 조절
+  const isMobile = window.innerWidth < 768;
+  const laneWidth = isMobile ? 60 : 80;
   const nem1Width = Math.max(nem1Lanes.laneCount, 1) * laneWidth;
   const nem2Width = Math.max(nem2Lanes.laneCount, 1) * laneWidth;
   const totalHeight = TIME_ORDER.length * ROW_HEIGHT;
