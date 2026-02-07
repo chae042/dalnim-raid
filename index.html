@@ -1288,6 +1288,10 @@ let currentDay = '금';
 let currentRaidType = '';
 let currentMode = 'view';
 
+// 레인 순서 관리 (드래그 드롭 배치용)
+let nem1LaneOrder = [];  // 닉네임 배열
+let nem2LaneOrder = [];  // 닉네임 배열
+
 // 현재 레이드의 필요인원 가져오기
 function getCurrentRaidRequired() {
   const raid = raidSettings.find(r => r.레이드명 === currentRaidType);
@@ -1666,11 +1670,30 @@ function renderEditMode(container, players) {
   const nem1Players = getUniquePlayersForNem('1넴');
   const nem2Players = getUniquePlayersForNem('2넴');
   
+  // 전역 레인 순서 업데이트 (새 플레이어 추가, 없어진 플레이어 제거)
+  const nem1Names = nem1Players.map(p => p.닉네임);
+  const nem2Names = nem2Players.map(p => p.닉네임);
+  
+  // 없어진 플레이어 제거
+  nem1LaneOrder = nem1LaneOrder.filter(n => nem1Names.includes(n));
+  nem2LaneOrder = nem2LaneOrder.filter(n => nem2Names.includes(n));
+  
+  // 새 플레이어 추가 (맨 뒤에)
+  nem1Names.forEach(n => { if (!nem1LaneOrder.includes(n)) nem1LaneOrder.push(n); });
+  nem2Names.forEach(n => { if (!nem2LaneOrder.includes(n)) nem2LaneOrder.push(n); });
+  
+  // 레인 순서 기준으로 플레이어 정렬
+  const sortedNem1 = nem1LaneOrder.map(n => nem1Players.find(p => p.닉네임 === n)).filter(Boolean);
+  const sortedNem2 = nem2LaneOrder.map(n => nem2Players.find(p => p.닉네임 === n)).filter(Boolean);
+  
   // 플레이어별 레인 인덱스 매핑
   const nem1LaneMap = {};
-  nem1Players.forEach((p, idx) => nem1LaneMap[p.닉네임] = idx);
+  sortedNem1.forEach((p, idx) => nem1LaneMap[p.닉네임] = idx);
   const nem2LaneMap = {};
-  nem2Players.forEach((p, idx) => nem2LaneMap[p.닉네임] = idx);
+  sortedNem2.forEach((p, idx) => nem2LaneMap[p.닉네임] = idx);
+  
+  const nem1LaneCount = sortedNem1.length || 1;
+  const nem2LaneCount = sortedNem2.length || 1;
   
   // 셀 렌더링
   const renderCells = (timeIdx, nemType, laneMap, laneCount) => {
@@ -1712,9 +1735,6 @@ function renderEditMode(container, players) {
     }).length;
   };
   
-  const nem1LaneCount = nem1Players.length || 1;
-  const nem2LaneCount = nem2Players.length || 1;
-  
   const requiredCount = getCurrentRaidRequired();
   const rows = TIME_ORDER.map((_, idx) => {
     const total = getActiveCount(idx, '1넴') + getActiveCount(idx, '2넴');
@@ -1722,9 +1742,9 @@ function renderEditMode(container, players) {
     return `
       <tr>
         <td class="time-cell">${TIME_LABELS[idx]}</td>
-        ${renderCells(idx, '1넴', nem1LaneMap, nem1Players.length)}
+        ${renderCells(idx, '1넴', nem1LaneMap, nem1LaneCount)}
         <td class="divider-cell"></td>
-        ${renderCells(idx, '2넴', nem2LaneMap, nem2Players.length)}
+        ${renderCells(idx, '2넴', nem2LaneMap, nem2LaneCount)}
         <td class="total-cell ${highlightClass}">${total}명</td>
       </tr>
     `;
@@ -1984,10 +2004,39 @@ function updateMoveControls() {
 }
 
 // 선택된 칩들 이동 (시간대별)
-function moveSelectedTo(targetNem) {
+function moveSelectedTo(targetNem, targetLaneIdx = -1) {
   if (selectedChips.size === 0) return;
   
   saveState();
+  
+  // 이동할 플레이어 닉네임들 수집
+  const movingPlayers = new Set();
+  selectedChips.forEach(key => {
+    const [name] = key.split('|');
+    movingPlayers.add(name);
+  });
+  
+  // 레인 순서 업데이트
+  const targetOrder = targetNem === '1넴' ? nem1LaneOrder : nem2LaneOrder;
+  const otherOrder = targetNem === '1넴' ? nem2LaneOrder : nem1LaneOrder;
+  
+  // 기존 위치에서 제거
+  movingPlayers.forEach(name => {
+    const idx1 = nem1LaneOrder.indexOf(name);
+    if (idx1 !== -1) nem1LaneOrder.splice(idx1, 1);
+    const idx2 = nem2LaneOrder.indexOf(name);
+    if (idx2 !== -1) nem2LaneOrder.splice(idx2, 1);
+  });
+  
+  // 새 위치에 삽입
+  const playersArray = Array.from(movingPlayers);
+  if (targetLaneIdx === -1 || targetLaneIdx >= targetOrder.length) {
+    // 맨 뒤에 추가
+    targetOrder.push(...playersArray);
+  } else {
+    // 지정 위치에 삽입
+    targetOrder.splice(targetLaneIdx, 0, ...playersArray);
+  }
   
   // 선택된 시간대들의 네임드 변경
   selectedChips.forEach(key => {
@@ -2225,22 +2274,37 @@ document.addEventListener('mouseup', (e) => {
     // 드롭 영역 판별
     const target = document.elementFromPoint(e.clientX, e.clientY);
     if (target) {
-      // 헤더에 드롭
+      // 헤더에 드롭 → 맨 뒤에 추가
       const th = target.closest('th.nem1, th.nem2');
       if (th) {
         const targetNem = th.classList.contains('nem1') ? '1넴' : '2넴';
-        moveSelectedTo(targetNem);
+        moveSelectedTo(targetNem, -1);
         return;
       }
       
-      // 셀에 드롭
+      // 셀에 드롭 → 해당 레인 위치에 삽입
       const cell = target.closest('td.player-lane-cell');
       if (cell) {
         const row = cell.closest('tr');
-        const dividerIdx = Array.from(row.children).findIndex(c => c.classList.contains('divider-cell'));
-        const cellIdx = Array.from(row.children).indexOf(cell);
+        const cells = Array.from(row.children);
+        const dividerIdx = cells.findIndex(c => c.classList.contains('divider-cell'));
+        const cellIdx = cells.indexOf(cell);
         const targetNem = cellIdx < dividerIdx ? '1넴' : '2넴';
-        moveSelectedTo(targetNem);
+        
+        // 레인 인덱스 계산 (시간 셀 제외)
+        let laneIdx;
+        if (targetNem === '1넴') {
+          laneIdx = cellIdx - 1; // 시간 셀 제외
+        } else {
+          laneIdx = cellIdx - dividerIdx - 1; // 시간 + 1넴 셀들 + 디바이더 제외
+        }
+        
+        // 셀 내 X 좌표로 왼쪽/오른쪽 판단
+        const cellRect = cell.getBoundingClientRect();
+        const isRightHalf = e.clientX > cellRect.left + cellRect.width / 2;
+        if (isRightHalf) laneIdx++;
+        
+        moveSelectedTo(targetNem, laneIdx);
         return;
       }
     }
