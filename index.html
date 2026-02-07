@@ -466,11 +466,11 @@
   }
 
   .time-cell {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: #666;
     text-align: center;
-    width: 80px;
+    width: 60px;
   }
 
   .players-cell {
@@ -486,9 +486,9 @@
   .total-cell {
     text-align: center;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 14px;
     color: #888;
-    width: 60px;
+    width: 50px;
   }
 
   .total-cell.highlight {
@@ -502,7 +502,14 @@
   }
 
   .timeline-table .time-header {
-    width: 70px;
+    width: 60px;
+  }
+
+  .timeline-table .nem-block-cell {
+    padding: 0;
+    vertical-align: top;
+    position: relative;
+    overflow: hidden;
   }
 
   .timeline-table .nem1-block-cell,
@@ -524,6 +531,7 @@
   .blocks-container {
     position: relative;
     width: 100%;
+    overflow: hidden;
     /* 시간대별 가로 라인 (44px 간격) */
     background: repeating-linear-gradient(
       to bottom,
@@ -536,16 +544,20 @@
 
   .timeline-block {
     position: absolute;
-    border-radius: 6px;
+    border-radius: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
-    gap: 2px;
+    gap: 1px;
     box-sizing: border-box;
     transition: filter 0.15s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 2px;
   }
 
   .timeline-block:hover {
@@ -553,7 +565,7 @@
   }
 
   .timeline-block .job-icon {
-    font-size: 10px;
+    font-size: 9px;
     opacity: 0.8;
   }
 
@@ -1092,54 +1104,134 @@
     display: none !important;
   }
 
-  /* 모바일 모달 최적화 */
+  /* 모바일 모달 - 전체화면 앱 스타일 */
+  .is-mobile .modal-overlay {
+    align-items: stretch;
+    padding: 0;
+  }
+
   .is-mobile .modal {
-    width: 95%;
-    max-width: none;
-    max-height: 90vh;
-    padding: 16px;
-    margin: 10px;
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .is-mobile .modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #2a2a4a;
+    margin-bottom: 0;
+    flex-shrink: 0;
   }
 
   .is-mobile .modal-title {
-    font-size: 16px;
+    font-size: 20px;
+  }
+
+  .is-mobile .modal-close {
+    font-size: 28px;
+    padding: 4px;
+  }
+
+  .is-mobile .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: 100px;
   }
 
   .is-mobile .modal-body label {
-    font-size: 14px;
-    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #ccc;
   }
 
   .is-mobile .modal-body input,
   .is-mobile .modal-body select {
-    padding: 14px 12px;
-    font-size: 16px; /* iOS 줌 방지 */
+    padding: 16px 14px;
+    font-size: 17px;
     -webkit-appearance: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    background: #16213e;
   }
 
   .is-mobile .modal-body .form-group {
-    margin-bottom: 14px;
+    margin-bottom: 20px;
   }
 
   .is-mobile .day-selector {
-    gap: 6px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .is-mobile .day-btn {
-    padding: 10px 12px;
-    font-size: 14px;
+    padding: 14px 16px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .is-mobile .modal-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px;
+    background: #1a1a2e;
+    border-top: 1px solid #2a2a4a;
+    margin-top: 0;
+    gap: 12px;
   }
 
   .is-mobile .modal-btn {
-    padding: 14px;
-    font-size: 15px;
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 600;
+    border-radius: 10px;
   }
 
   .is-mobile .search-btn,
   .is-mobile .submit-btn {
-    padding: 14px;
-    font-size: 15px;
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 600;
+    border-radius: 10px;
+  }
+
+  .is-mobile .form-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .is-mobile .form-row .form-group {
+    flex: none;
+    width: 100%;
+  }
+
+  /* 모바일 신청 버튼 크게 */
+  .is-mobile .floating-btn {
+    width: 100px;
+    height: 100px;
+    font-size: 44px;
+    bottom: 24px;
+    right: 16px;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+  }
+
+  /* 모바일 모달 제목/레이블 더 크게 */
+  .is-mobile .modal-title {
+    font-size: 20px;
+  }
+
+  .is-mobile .modal-body label {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 10px;
   }
 
   /* 토스트 알림 */
@@ -2060,8 +2152,8 @@ function renderViewMode(container, players) {
       const jobInfo = getJobInfo(s.직업);
       const top = s.startIdx * ROW_HEIGHT;
       const height = (s.endIdx - s.startIdx + 1) * ROW_HEIGHT - 4;
-      const left = s.lane * laneWidth + 2;
-      const width = laneWidth - 4;
+      const left = s.lane * laneWidth + 3;
+      const width = laneWidth - 6; // 간격 확보
       const tooltip = s.닉네임 + (s.참고사항 ? ' - ' + s.참고사항 : '');
       return `<div class="timeline-block ${jobInfo.class}" style="top:${top}px; height:${height}px; left:${left}px; width:${width}px;" title="${tooltip}">
         <span class="job-icon">${jobInfo.icon}</span>${s.닉네임}
@@ -2069,7 +2161,7 @@ function renderViewMode(container, players) {
     }).join('');
   };
   
-  const laneWidth = 90; // 넉넉하게 (가로 스크롤 OK)
+  const laneWidth = 72; // 컴팩트하게, 가로 스크롤로 대응
   const totalHeight = TIME_ORDER.length * ROW_HEIGHT;
   
   // 네임드별 너비 계산
@@ -2080,7 +2172,7 @@ function renderViewMode(container, players) {
   
   // 테이블 최소 너비 (divider 포함)
   const dividerCount = nemNames.length - 1;
-  let tableMinWidth = 80 + 60 + (dividerCount * 1); // 시간 + 합계 + divider(1px)
+  let tableMinWidth = 60 + 50 + (dividerCount * 1); // 시간(60) + 합계(50) + divider(1px)
   nemNames.forEach(nem => tableMinWidth += nemWidths[nem]);
   
   // 행 생성
