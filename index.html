@@ -580,13 +580,15 @@
   .timeline-block.job-support { background: rgba(234, 179, 8, 0.3); color: #facc15; }
 
   /* 편집 모드 테이블 */
-  .schedule-table.edit-table {
+  .schedule-table.edit-table,
+  .schedule-table.view-table {
     border-collapse: collapse;
     user-select: none;
     -webkit-user-select: none;
   }
 
-  .schedule-table.edit-table .time-header {
+  .schedule-table.edit-table .time-header,
+  .schedule-table.view-table .time-header {
     width: 70px;
   }
 
@@ -601,14 +603,16 @@
     border: none;
   }
 
-  .schedule-table.edit-table .player-lane-cell {
+  .schedule-table.edit-table .player-lane-cell,
+  .schedule-table.view-table .player-lane-cell {
     padding: 4px;
     text-align: center;
     vertical-align: middle;
     min-width: 85px;
   }
 
-  .schedule-table.edit-table .player-lane-cell.empty {
+  .schedule-table.edit-table .player-lane-cell.empty,
+  .schedule-table.view-table .player-lane-cell.empty {
     min-width: 85px;
   }
 
@@ -2075,7 +2079,7 @@ function getPlayerNemAtTime(player, timeIdx) {
   return player.네임드; // 기본값
 }
 
-// 보기 모드 - 동적 네임드 수 지원
+// 보기 모드 - 타임라인 블록 (레인 배치는 편집 모드와 동일)
 function renderViewMode(container, players) {
   const ROW_HEIGHT = 44;
   const namedCount = getCurrentRaidNamedCount();
@@ -2119,26 +2123,41 @@ function renderViewMode(container, players) {
     nemSegsMap[nem] = allSegments.filter(s => s.nem === nem);
   });
   
-  // 레인 배치 (겹침 처리)
-  const assignLanes = (segs) => {
-    if (segs.length === 0) return { segments: [], laneCount: 0 };
-    
-    // 닉네임 가나다순 고정 레인
-    const uniqueNames = [...new Set(segs.map(s => s.닉네임))].sort();
-    const nameLaneMap = {};
-    uniqueNames.forEach((name, idx) => nameLaneMap[name] = idx);
-    
-    segs.forEach(seg => {
-      seg.lane = nameLaneMap[seg.닉네임];
+  // 네임드별 고유 플레이어 (편집 모드와 동일한 방식)
+  const getUniquePlayersForNem = (nemType) => {
+    const seen = new Set();
+    const result = [];
+    players.forEach(p => {
+      if (seen.has(p.닉네임)) return;
+      const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
+      for (let t = startIdx; t <= endIdx; t++) {
+        if (getPlayerNemAtTime(p, t) === nemType) {
+          seen.add(p.닉네임);
+          result.push(p);
+          break;
+        }
+      }
     });
-    
-    return { segments: segs, laneCount: uniqueNames.length || 1 };
+    return result;
   };
   
-  // 네임드별 레인 배치
-  const nemLanesMap = {};
+  // 네임드별 레인맵 (닉네임 가나다순 - 편집 모드와 동일)
+  const nemLaneMap = {};
+  const nemLaneCount = {};
   nemNames.forEach(nem => {
-    nemLanesMap[nem] = assignLanes(nemSegsMap[nem]);
+    const uniquePlayers = getUniquePlayersForNem(nem);
+    const sorted = [...uniquePlayers].sort((a, b) => a.닉네임.localeCompare(b.닉네임, 'ko'));
+    const laneMap = {};
+    sorted.forEach((p, idx) => laneMap[p.닉네임] = idx);
+    nemLaneMap[nem] = laneMap;
+    nemLaneCount[nem] = sorted.length || 1;
+  });
+  
+  // 세그먼트에 레인 할당
+  nemNames.forEach(nem => {
+    nemSegsMap[nem].forEach(seg => {
+      seg.lane = nemLaneMap[nem][seg.닉네임] ?? 0;
+    });
   });
   
   // 시간별 활동 인원 수
@@ -2147,14 +2166,15 @@ function renderViewMode(container, players) {
   };
   
   // 블록 렌더링
-  const renderBlocks = (laneData, laneWidth) => {
-    if (laneData.segments.length === 0) return '';
-    return laneData.segments.map(s => {
+  const laneWidth = 85; // 편집 모드 셀 너비와 맞춤
+  const renderBlocks = (segs, laneCount) => {
+    if (segs.length === 0) return '';
+    return segs.map(s => {
       const jobInfo = getJobInfo(s.직업);
       const top = s.startIdx * ROW_HEIGHT;
       const height = (s.endIdx - s.startIdx + 1) * ROW_HEIGHT - 4;
-      const left = s.lane * laneWidth + 3;
-      const width = laneWidth - 6; // 간격 확보
+      const left = s.lane * laneWidth + 2;
+      const width = laneWidth - 4;
       const tooltip = s.닉네임 + (s.참고사항 ? ' - ' + s.참고사항 : '');
       return `<div class="timeline-block ${jobInfo.class}" style="top:${top}px; height:${height}px; left:${left}px; width:${width}px;" title="${tooltip}">
         <span class="job-icon">${jobInfo.icon}</span>${s.닉네임}
@@ -2162,18 +2182,17 @@ function renderViewMode(container, players) {
     }).join('');
   };
   
-  const laneWidth = 72; // 컴팩트하게, 가로 스크롤로 대응
   const totalHeight = TIME_ORDER.length * ROW_HEIGHT;
   
   // 네임드별 너비 계산
   const nemWidths = {};
   nemNames.forEach(nem => {
-    nemWidths[nem] = Math.max(nemLanesMap[nem].laneCount, 1) * laneWidth;
+    nemWidths[nem] = Math.max(nemLaneCount[nem], 1) * laneWidth;
   });
   
-  // 테이블 최소 너비 (divider 포함)
+  // 테이블 최소 너비
   const dividerCount = nemNames.length - 1;
-  let tableMinWidth = 60 + 50 + (dividerCount * 1); // 시간(60) + 합계(50) + divider(1px)
+  let tableMinWidth = 70 + 50 + (dividerCount * 1);
   nemNames.forEach(nem => tableMinWidth += nemWidths[nem]);
   
   // 행 생성
@@ -2196,7 +2215,7 @@ function renderViewMode(container, players) {
     </tr>`;
   }).join('');
   
-  // 헤더 생성 (네임드 간 구분선 포함)
+  // 헤더 생성
   const nemHeaders = nemNames.map((nem, i) => {
     const config = NEM_CONFIG[i + 1];
     const header = `<th class="${config.class}" style="width:${nemWidths[nem]}px;">${config.icon} ${nem}</th>`;
@@ -2219,12 +2238,12 @@ function renderViewMode(container, players) {
     </div>
   `;
   
-  // 첫 번째 행에 블록 컨테이너 삽입 + divider rowspan 설정
+  // 첫 번째 행에 블록 컨테이너 삽입
   const firstRow = container.querySelector('tbody tr');
   nemNames.forEach(nem => {
     const cell = firstRow.querySelector(`.nem-block-cell[data-nem="${nem}"]`);
     if (cell) {
-      cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nemLanesMap[nem], laneWidth)}</div>`;
+      cell.innerHTML = `<div class="blocks-container" style="height:${totalHeight}px;">${renderBlocks(nemSegsMap[nem], nemLaneCount[nem])}</div>`;
       cell.setAttribute('rowspan', TIME_ORDER.length);
     }
   });
