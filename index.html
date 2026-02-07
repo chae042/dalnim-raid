@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=800, initial-scale=0.5, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>🌙 달님봇 - 파티 일정</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
@@ -973,9 +973,11 @@
     background: #ef4444;
   }
 
-  /* 스케줄 뷰 */
+  /* 스케줄 뷰 - 노션 스타일 가로 스크롤 */
   #schedule-view {
     width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* 모바일에서 편집모드 숨김 (JS로 .is-mobile 클래스 추가) */
@@ -1573,9 +1575,10 @@ function renderViewMode(container, players) {
   const nem1Width = Math.max(nem1Lanes.laneCount, 1) * laneWidth;
   const nem2Width = Math.max(nem2Lanes.laneCount, 1) * laneWidth;
   const totalHeight = TIME_ORDER.length * ROW_HEIGHT;
+  const tableMinWidth = 80 + nem1Width + nem2Width + 60; // 시간 + 1넴 + 2넴 + 합계
   
   container.innerHTML = `
-    <table class="schedule-table timeline-table">
+    <table class="schedule-table timeline-table" style="min-width:${tableMinWidth}px;">
       <thead>
         <tr>
           <th class="time-header">시간</th>
