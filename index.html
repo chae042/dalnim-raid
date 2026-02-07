@@ -1536,7 +1536,7 @@
       </div>
       <div class="modal-footer">
         <button class="modal-btn secondary" onclick="closeModal('register-modal')">취소</button>
-        <button class="modal-btn primary" onclick="submitForm()">저장하기</button>
+        <button class="modal-btn primary submit-btn" onclick="submitForm()">저장하기</button>
       </div>
     </div>
   </div>
@@ -2920,6 +2920,20 @@ document.addEventListener('mouseup', (e) => {
     // 드롭 영역 판별
     const target = document.elementFromPoint(e.clientX, e.clientY);
     if (target) {
+      // 칩 위에 드롭 → 그 칩 앞에 삽입
+      const targetChip = target.closest('.player-chip');
+      if (targetChip) {
+        const targetName = targetChip.dataset.nickname;
+        const targetNem = targetChip.dataset.nem;
+        
+        if (targetName && targetNem) {
+          // 해당 네임드에서 타겟 칩의 위치 찾기
+          const targetIdx = nemLaneOrders[targetNem].indexOf(targetName);
+          moveSelectedTo(targetNem, targetIdx);
+          return;
+        }
+      }
+      
       // 헤더에 드롭 → 맨 뒤에 추가
       const th = target.closest('th.nem1, th.nem2, th.nem3, th.nem4');
       if (th) {
@@ -2931,7 +2945,7 @@ document.addEventListener('mouseup', (e) => {
         }
       }
       
-      // 셀에 드롭 → 해당 레인 위치에 삽입
+      // 셀(빈 공간)에 드롭 → 해당 네임드 맨 뒤에 추가
       const cell = target.closest('td.player-lane-cell');
       if (cell) {
         const row = cell.closest('tr');
@@ -2947,32 +2961,15 @@ document.addEventListener('mouseup', (e) => {
         let regionStart = 1; // 시간 셀 제외
         
         for (let i = 0; i < namedCount; i++) {
-          const regionEnd = i < dividerIdxs.length ? dividerIdxs[i] : cells.length - 1; // 합계 전까지
+          const regionEnd = i < dividerIdxs.length ? dividerIdxs[i] : cells.length - 1;
           if (cellIdx >= regionStart && cellIdx < regionEnd) {
             targetNem = `${i + 1}넴`;
             break;
           }
-          regionStart = regionEnd + 1; // 디바이더 다음
+          regionStart = regionEnd + 1;
         }
         
-        // 레인 인덱스 계산
-        let laneIdx = 0;
-        let countStart = 1;
-        for (let i = 0; i < namedCount; i++) {
-          const regionEnd = i < dividerIdxs.length ? dividerIdxs[i] : cells.length - 1;
-          if (`${i + 1}넴` === targetNem) {
-            laneIdx = cellIdx - countStart;
-            break;
-          }
-          countStart = regionEnd + 1;
-        }
-        
-        // 셀 내 X 좌표로 왼쪽/오른쪽 판단
-        const cellRect = cell.getBoundingClientRect();
-        const isRightHalf = e.clientX > cellRect.left + cellRect.width / 2;
-        if (isRightHalf) laneIdx++;
-        
-        moveSelectedTo(targetNem, laneIdx);
+        moveSelectedTo(targetNem, -1);
         return;
       }
     }
