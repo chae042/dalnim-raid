@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🌙 달님봇 - 파티 일정</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🌙 달님이 - 파티 일정</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
@@ -1204,15 +1204,19 @@
     margin-bottom: 20px;
   }
 
-  .is-mobile .day-selector {
-    gap: 8px;
-    flex-wrap: wrap;
+  .is-mobile .day-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    width: 100%;
   }
 
   .is-mobile .day-btn {
-    padding: 14px 16px;
-    font-size: 16px;
+    flex: 1;
+    padding: 16px 0;
+    font-size: 17px;
     border-radius: 10px;
+    text-align: center;
   }
 
   .is-mobile .modal-footer {
@@ -1481,7 +1485,7 @@
     <div id="notes-section"></div>
 
     <div class="footer">
-      🌙 달님봇 · <span id="update-time"></span>
+      🌙 달님이 · <span id="update-time"></span>
     </div>
   </div>
 
@@ -1568,13 +1572,13 @@
         <div class="form-group">
           <label>못하는 요일 (클릭해서 선택)</label>
           <div class="day-buttons">
-            <button type="button" class="day-btn" data-day="월">월</button>
-            <button type="button" class="day-btn" data-day="화">화</button>
             <button type="button" class="day-btn" data-day="수">수</button>
             <button type="button" class="day-btn" data-day="목">목</button>
             <button type="button" class="day-btn" data-day="금">금</button>
             <button type="button" class="day-btn" data-day="토">토</button>
             <button type="button" class="day-btn" data-day="일">일</button>
+            <button type="button" class="day-btn" data-day="월">월</button>
+            <button type="button" class="day-btn" data-day="화">화</button>
           </div>
         </div>
 
@@ -3319,10 +3323,22 @@ document.addEventListener('pointerup', (e) => {
 // ============================================
 function openModal(modalId) {
   document.getElementById(modalId).classList.add('active');
+  
+  // 모바일에서 모달 열면 viewport 정상화 (input 자동줌 방지)
+  if (document.body.classList.contains('is-mobile')) {
+    const viewport = document.querySelector('meta[name="viewport"]');
+    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+  }
 }
 
 function closeModal(modalId) {
   document.getElementById(modalId).classList.remove('active');
+  
+  // 모바일에서 모달 닫으면 viewport 원래대로 (테이블 보기용)
+  if (document.body.classList.contains('is-mobile')) {
+    const viewport = document.querySelector('meta[name="viewport"]');
+    viewport.setAttribute('content', 'width=800, initial-scale=0.5, user-scalable=yes');
+  }
 }
 
 // 참가자 등록 모달
