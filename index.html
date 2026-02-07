@@ -2120,9 +2120,10 @@ function renderViewMode(container, players) {
   // 레인 배치 (겹침 처리)
   const assignLanes = (segs) => {
     if (segs.length === 0) return { segments: [], laneCount: 0 };
-    const sorted = [...segs].sort((a, b) => a.startIdx - b.startIdx);
-    const lanes = [];
-    sorted.forEach(seg => {
+    
+    // 등장 순서대로 레인 할당 (중복 시간대 겹침 방지)
+    const lanes = []; // 각 레인의 종료 시간
+    segs.forEach(seg => {
       let assignedLane = -1;
       for (let i = 0; i < lanes.length; i++) {
         if (lanes[i] < seg.startIdx) { assignedLane = i; break; }
@@ -2131,7 +2132,7 @@ function renderViewMode(container, players) {
       seg.lane = assignedLane;
       lanes[assignedLane] = seg.endIdx;
     });
-    return { segments: sorted, laneCount: lanes.length || 1 };
+    return { segments: segs, laneCount: lanes.length || 1 };
   };
   
   // 네임드별 레인 배치
@@ -2282,18 +2283,31 @@ function renderEditMode(container, players) {
     const players = getUniquePlayersForNem(nem);
     const names = players.map(p => p.닉네임);
     
-    // 전역 레인 순서 업데이트
-    nemLaneOrders[nem] = nemLaneOrders[nem].filter(n => names.includes(n));
-    names.forEach(n => { if (!nemLaneOrders[nem].includes(n)) nemLaneOrders[nem].push(n); });
+    // 새 플레이어만 끝에 추가 (기존 순서는 건드리지 않음)
+    names.forEach(n => { 
+      if (!nemLaneOrders[nem].includes(n)) nemLaneOrders[nem].push(n); 
+    });
     
-    const sorted = nemLaneOrders[nem].map(n => players.find(p => p.닉네임 === n)).filter(Boolean);
+    // 현재 존재하는 플레이어만 필터링 (순서는 유지)
+    const activePlayers = nemLaneOrders[nem]
+      .map(n => players.find(p => p.닉네임 === n))
+      .filter(Boolean);
+    
+    // 레인맵: 원래 순서 기준으로 레인 번호 부여
     const laneMap = {};
-    sorted.forEach((p, idx) => laneMap[p.닉네임] = idx);
+    activePlayers.forEach(p => {
+      laneMap[p.닉네임] = nemLaneOrders[nem].indexOf(p.닉네임);
+    });
+    
+    // 최대 레인 번호 + 1
+    const maxLane = activePlayers.length > 0 
+      ? Math.max(...activePlayers.map(p => laneMap[p.닉네임])) + 1 
+      : 1;
     
     nemData[nem] = {
       players,
       laneMap,
-      laneCount: sorted.length || 1
+      laneCount: maxLane
     };
   });
   
@@ -2520,10 +2534,24 @@ async function submitForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'register', data })
     });
-    const result = await response.json();
     
-    if (result.success) {
+    // 응답 텍스트 먼저 받기
+    const text = await response.text();
+    let result;
+    
+    try {
+      result = text ? JSON.parse(text) : { success: response.ok };
+    } catch {
+      // JSON 파싱 실패시 응답 상태로 판단
+      result = { success: response.ok };
+    }
+    
+    if (result.success || response.ok) {
       showMessage('register-message', 'success', '저장되었습니다!');
+      setTimeout(() => {
+        closeModal('register-modal');
+        loadScheduleData();
+      }, 1000);
     } else {
       showMessage('register-message', 'error', '저장 실패: ' + (result.message || '알 수 없는 오류'));
     }
