@@ -269,30 +269,31 @@
   }
 
   /* View Mode Toggle */
-  .view-toggle {
+  .mode-toggle {
     display: flex;
     gap: 8px;
     margin-bottom: 20px;
     justify-content: center;
   }
 
-  .view-toggle-btn {
-    padding: 8px 16px;
+  .mode-toggle-btn {
+    padding: 10px 20px;
     border-radius: 6px;
-    background: transparent;
+    background: #16213e;
     border: 1px solid #2a2a4a;
     color: #888;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 500;
     transition: all 0.2s;
   }
 
-  .view-toggle-btn:hover {
+  .mode-toggle-btn:hover {
     border-color: #60a5fa;
     color: #60a5fa;
   }
 
-  .view-toggle-btn.active {
+  .mode-toggle-btn.active {
     background: #60a5fa;
     color: #fff;
     border-color: #60a5fa;
@@ -368,7 +369,7 @@
   .schedule-table td {
     padding: 14px 12px;
     border-bottom: 1px solid #2a2a4a;
-    vertical-align: top;
+    vertical-align: middle;
   }
 
   .time-cell {
@@ -381,7 +382,7 @@
 
   .players-cell {
     min-width: 200px;
-    position: relative;
+    vertical-align: middle;
   }
 
   .players-wrap {
@@ -398,7 +399,7 @@
     width: 80px;
   }
 
-  /* Player Chip */
+  /* Player Chip (편집 모드) */
   .player-chip {
     display: inline-flex;
     align-items: center;
@@ -423,24 +424,48 @@
     opacity: 0.8;
   }
 
-  /* Player Block (뷰 모드용 - 세로 병합) */
+  .player-chip.no-time {
+    opacity: 0.4;
+    filter: grayscale(100%);
+  }
+
+  /* Player Block (보기 모드 - 병합 셀용) */
   .player-block {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 8px 14px;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
     border-radius: 6px;
     font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
-    margin: 2px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    text-align: center;
+    height: 100%;
+    min-height: 40px;
+  }
+
+  .player-block .job-icon {
+    font-size: 12px;
   }
 
   .player-block .time-range {
     font-size: 11px;
     opacity: 0.7;
-    margin-left: 4px;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* 병합 셀 스타일 */
+  .merged-cell {
+    padding: 4px !important;
+    vertical-align: middle;
+  }
+
+  .merged-cell .player-block {
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
   }
 
   /* Job Colors */
@@ -495,69 +520,6 @@
   .empty-cell {
     color: #444;
     font-size: 12px;
-  }
-
-  .player-chip.no-time {
-    opacity: 0.4;
-    filter: grayscale(100%);
-  }
-
-  /* Block View - 블록 뷰 전용 스타일 */
-  .block-view {
-    display: flex;
-    gap: 20px;
-    margin-top: 20px;
-  }
-
-  .block-column {
-    flex: 1;
-    background: #16213e;
-    border-radius: 12px;
-    padding: 16px;
-  }
-
-  .block-column-header {
-    text-align: center;
-    font-size: 18px;
-    font-weight: 700;
-    padding-bottom: 12px;
-    margin-bottom: 12px;
-    border-bottom: 2px solid #2a2a4a;
-  }
-
-  .block-column-header.nem1 { color: #74b9ff; }
-  .block-column-header.nem2 { color: #ff7675; }
-
-  .block-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .player-block-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    border: 1px solid transparent;
-  }
-
-  .player-block-card .player-name {
-    font-weight: 600;
-    font-size: 16px;
-    flex: 1;
-  }
-
-  .player-block-card .player-time {
-    font-size: 13px;
-    opacity: 0.7;
-  }
-
-  .player-block-card .player-note {
-    font-size: 12px;
-    opacity: 0.6;
-    margin-top: 4px;
   }
 
   /* Legend */
@@ -645,10 +607,10 @@
       <div class="raid-tab" data-raid="클리어팟" onclick="selectRaidType('클리어팟')">클리어팟</div>
     </div>
 
-    <!-- 뷰 모드 토글 -->
-    <div class="view-toggle">
-      <button class="view-toggle-btn active" onclick="setViewMode('block')">📊 블록 뷰</button>
-      <button class="view-toggle-btn" onclick="setViewMode('table')">📋 시간별 뷰</button>
+    <!-- 보기/편집 모드 토글 -->
+    <div class="mode-toggle">
+      <button class="mode-toggle-btn active" onclick="setMode('view')">👁️ 보기 모드</button>
+      <button class="mode-toggle-btn" onclick="setMode('edit')">✏️ 편집 모드</button>
     </div>
 
     <!-- 요일 탭 -->
@@ -802,7 +764,7 @@ const JOB_MAP = {
 let allPlayers = [];
 let currentDay = '금';
 let currentRaidType = '트라이팟';
-let viewMode = 'block'; // 'block' or 'table'
+let currentMode = 'view'; // 'view' or 'edit'
 
 // 메인 탭 전환
 function showMainTab(tabName) {
@@ -828,11 +790,11 @@ function selectRaidType(type) {
   renderSchedule();
 }
 
-// 뷰 모드 변경
-function setViewMode(mode) {
-  viewMode = mode;
-  document.querySelectorAll('.view-toggle-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.includes(mode === 'block' ? '블록' : '시간별'));
+// 보기/편집 모드 변경
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-toggle-btn').forEach((btn, idx) => {
+    btn.classList.toggle('active', (mode === 'view' && idx === 0) || (mode === 'edit' && idx === 1));
   });
   renderSchedule();
 }
@@ -867,11 +829,6 @@ function getTimeRange(startTime, endTime) {
   if (endIdx < startIdx) endIdx = startIdx;
   
   return { startIdx, endIdx };
-}
-
-// 시간 라벨 가져오기
-function getTimeLabel(idx) {
-  return TIME_LABELS[idx] || '';
 }
 
 // 플레이어 목록 불러오기
@@ -950,64 +907,167 @@ function renderSchedule() {
   
   const nem1 = filtered.filter(p => p.네임드 === '1넴');
   const nem2 = filtered.filter(p => p.네임드 === '2넴');
-  const nemNone = filtered.filter(p => !p.네임드);
   
-  if (viewMode === 'block') {
-    renderBlockView(container, nem1, nem2, nemNone);
+  if (currentMode === 'view') {
+    renderViewMode(container, nem1, nem2);
   } else {
-    renderTableView(container, nem1, nem2);
+    renderEditMode(container, nem1, nem2);
   }
 }
 
-// 블록 뷰 렌더링 (인원별 블록)
-function renderBlockView(container, nem1, nem2, nemNone) {
-  const renderPlayerBlock = (player) => {
-    const jobInfo = getJobInfo(player.직업);
-    const { startIdx, endIdx } = getTimeRange(player.시작시간, player.종료시간);
-    const timeRange = `${getTimeLabel(startIdx)} ~ ${getTimeLabel(endIdx)}`;
-    const noTime = player.시작시간 === '상관없음' && player.종료시간 === '상관없음';
-    
-    return `
-      <div class="player-block-card ${jobInfo.class}" title="${player.참고사항 || ''}">
-        <span class="job-icon">${jobInfo.icon}</span>
-        <span class="player-name">${player.닉네임}</span>
-        <span class="player-time">${noTime ? '시간 상관없음' : timeRange}</span>
-      </div>
-    `;
+// 보기 모드 렌더링 (블록 병합)
+function renderViewMode(container, nem1, nem2) {
+  // 각 플레이어의 시간 범위 정보 추가
+  const addTimeInfo = (players) => {
+    return players.map(p => {
+      const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
+      return { ...p, startIdx, endIdx, rowspan: endIdx - startIdx + 1 };
+    }).sort((a, b) => a.startIdx - b.startIdx); // 시작 시간 순 정렬
   };
   
+  const nem1WithTime = addTimeInfo(nem1);
+  const nem2WithTime = addTimeInfo(nem2);
+  
+  // 각 시간대별로 어떤 셀을 렌더링할지 계산
+  const nem1Cells = calculateMergedCells(nem1WithTime);
+  const nem2Cells = calculateMergedCells(nem2WithTime);
+  
+  // 시간별 총 인원 계산
+  const getCountAtTime = (players, timeIdx) => {
+    return players.filter(p => timeIdx >= p.startIdx && timeIdx <= p.endIdx).length;
+  };
+  
+  const rows = TIME_ORDER.map((time, idx) => {
+    const nem1Cell = nem1Cells[idx];
+    const nem2Cell = nem2Cells[idx];
+    const total = getCountAtTime(nem1WithTime, idx) + getCountAtTime(nem2WithTime, idx);
+    
+    return `
+      <tr>
+        <td class="time-cell">${TIME_LABELS[idx]}</td>
+        ${nem1Cell}
+        ${nem2Cell}
+        <td class="total-cell">${total}명</td>
+      </tr>
+    `;
+  }).join('');
+  
   container.innerHTML = `
-    <div class="block-view">
-      <div class="block-column">
-        <div class="block-column-header nem1">1️⃣ 1넴 (${nem1.length}명)</div>
-        <div class="block-list">
-          ${nem1.length > 0 ? nem1.map(renderPlayerBlock).join('') : '<div class="empty-cell">등록된 인원이 없습니다</div>'}
-        </div>
-      </div>
-      <div class="block-column">
-        <div class="block-column-header nem2">2️⃣ 2넴 (${nem2.length}명)</div>
-        <div class="block-list">
-          ${nem2.length > 0 ? nem2.map(renderPlayerBlock).join('') : '<div class="empty-cell">등록된 인원이 없습니다</div>'}
-        </div>
-      </div>
-    </div>
-    ${nemNone.length > 0 ? `
-      <div style="margin-top: 20px; padding: 16px; background: #16213e; border-radius: 12px;">
-        <div style="color: #888; margin-bottom: 12px; font-weight: 600;">⚪ 네임드 미정 (${nemNone.length}명)</div>
-        <div class="players-wrap">
-          ${nemNone.map(p => {
-            const jobInfo = getJobInfo(p.직업);
-            return `<span class="player-chip ${jobInfo.class}"><span class="job-icon">${jobInfo.icon}</span>${p.닉네임}</span>`;
-          }).join('')}
-        </div>
-      </div>
-    ` : ''}
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th>시간</th>
+          <th class="nem1">1️⃣ 1넴</th>
+          <th class="nem2">2️⃣ 2넴</th>
+          <th class="total">합계</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
   `;
 }
 
-// 테이블 뷰 렌더링 (시간별)
-function renderTableView(container, nem1, nem2) {
-  // 시간별 플레이어 분류
+// 병합 셀 계산
+function calculateMergedCells(players) {
+  const cells = {};
+  const occupied = {}; // 각 시간대별 사용된 열 추적
+  
+  // 초기화
+  for (let i = 0; i < TIME_ORDER.length; i++) {
+    occupied[i] = [];
+  }
+  
+  // 각 플레이어를 열에 배치
+  players.forEach(player => {
+    const { startIdx, endIdx, rowspan } = player;
+    
+    // 사용 가능한 열 찾기
+    let col = 0;
+    let found = false;
+    while (!found) {
+      let available = true;
+      for (let t = startIdx; t <= endIdx; t++) {
+        if (occupied[t].includes(col)) {
+          available = false;
+          break;
+        }
+      }
+      if (available) {
+        found = true;
+        // 이 열을 점유
+        for (let t = startIdx; t <= endIdx; t++) {
+          occupied[t].push(col);
+        }
+        player.col = col;
+      } else {
+        col++;
+      }
+    }
+  });
+  
+  // 최대 열 수 계산
+  const maxCols = Math.max(...Object.values(occupied).map(arr => arr.length), 1);
+  
+  // 각 시간대별 셀 생성
+  for (let timeIdx = 0; timeIdx < TIME_ORDER.length; timeIdx++) {
+    const playersStartingHere = players.filter(p => p.startIdx === timeIdx);
+    const playersOccupying = players.filter(p => timeIdx > p.startIdx && timeIdx <= p.endIdx);
+    
+    if (playersStartingHere.length === 0 && playersOccupying.length === 0) {
+      // 빈 셀
+      cells[timeIdx] = `<td class="players-cell"><span class="empty-cell">-</span></td>`;
+    } else {
+      // 셀 내용 생성
+      let cellContent = '';
+      let hasNewBlock = false;
+      
+      playersStartingHere.forEach(p => {
+        const jobInfo = getJobInfo(p.직업);
+        const timeRange = `${TIME_LABELS[p.startIdx]}~${TIME_LABELS[p.endIdx]}`;
+        hasNewBlock = true;
+        
+        if (p.rowspan > 1) {
+          // rowspan 사용
+          cellContent += `
+            <td class="players-cell merged-cell" rowspan="${p.rowspan}">
+              <div class="player-block ${jobInfo.class}" title="${p.참고사항 || ''}">
+                <span class="job-icon">${jobInfo.icon}</span>
+                <span>${p.닉네임}</span>
+                <span class="time-range">${timeRange}</span>
+              </div>
+            </td>
+          `;
+        } else {
+          // 단일 셀
+          cellContent += `
+            <td class="players-cell">
+              <div class="player-block ${jobInfo.class}" title="${p.참고사항 || ''}">
+                <span class="job-icon">${jobInfo.icon}</span>
+                <span>${p.닉네임}</span>
+              </div>
+            </td>
+          `;
+        }
+      });
+      
+      // rowspan으로 점유된 셀이면 아무것도 출력 안함
+      if (playersStartingHere.length === 0 && playersOccupying.length > 0) {
+        cells[timeIdx] = ''; // rowspan이 차지하고 있음
+      } else if (playersStartingHere.length === 0) {
+        cells[timeIdx] = `<td class="players-cell"><span class="empty-cell">-</span></td>`;
+      } else {
+        cells[timeIdx] = cellContent;
+      }
+    }
+  }
+  
+  return cells;
+}
+
+// 편집 모드 렌더링 (시간별 반복)
+function renderEditMode(container, nem1, nem2) {
   const getPlayersAtTime = (players, timeIdx) => {
     return players.filter(p => {
       const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
