@@ -299,6 +299,35 @@
     border-color: #60a5fa;
   }
 
+  /* 편집 모드 버튼 */
+  .edit-mode-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  .edit-mode-btn {
+    padding: 8px 16px;
+    background: #2a2a4a;
+    border: 1px solid #3a3a5a;
+    color: #aaa;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .edit-mode-btn:hover {
+    background: #3a3a5a;
+    color: #fff;
+  }
+
+  .edit-mode-btn.active {
+    background: #ffd700;
+    color: #1a1a2e;
+    border-color: #ffd700;
+  }
+
   /* Day Tabs */
   .day-tabs {
     display: flex;
@@ -456,6 +485,139 @@
   .timeline-block.job-summoner { background: rgba(20, 184, 166, 0.3); color: #14b8a6; }
   .timeline-block.job-healer { background: rgba(34, 197, 94, 0.3); color: #4ade80; }
   .timeline-block.job-support { background: rgba(234, 179, 8, 0.3); color: #facc15; }
+
+  /* 편집 모드 테이블 */
+  .schedule-table.edit-table {
+    border-collapse: collapse;
+  }
+
+  .schedule-table.edit-table .time-header {
+    width: 70px;
+  }
+
+  .schedule-table.edit-table .divider-header,
+  .schedule-table.edit-table .divider-cell {
+    width: 3px;
+    background: #3a3a5a;
+    padding: 0;
+  }
+
+  .schedule-table.edit-table .player-lane-cell {
+    padding: 4px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .schedule-table.edit-table .player-lane-cell.empty {
+    min-width: 70px;
+  }
+
+  /* 박스 선택 */
+  .selection-box {
+    position: fixed;
+    border: 2px dashed #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+  }
+
+  .player-chip.selected {
+    outline: 3px solid #ffd700;
+    outline-offset: 2px;
+  }
+
+  /* 이동 컨트롤 */
+  .move-controls {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    padding: 12px;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+  }
+
+  .move-controls.active {
+    display: flex;
+  }
+
+  .move-controls span {
+    color: #ffd700;
+    font-weight: 600;
+  }
+
+  .move-controls .hint-text {
+    color: #888;
+    font-weight: 400;
+    font-size: 12px;
+  }
+
+  .move-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .move-btn.cancel {
+    background: #666;
+    color: white;
+  }
+
+  .move-btn:hover {
+    transform: scale(1.05);
+  }
+
+  .edit-hint {
+    text-align: center;
+    color: #888;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  /* 비활성화된 칩 */
+  .player-chip.disabled {
+    opacity: 0.3;
+    filter: grayscale(100%);
+  }
+
+  /* 드래그 고스트 */
+  .drag-ghost {
+    position: fixed;
+    padding: 8px 12px;
+    background: rgba(255, 215, 0, 0.9);
+    color: #1a1a2e;
+    border-radius: 8px;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 1001;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  /* 드롭 영역 하이라이트 */
+  .schedule-table.edit-table th.nem1.drop-hover,
+  .schedule-table.edit-table th.nem2.drop-hover {
+    background: rgba(255, 215, 0, 0.3);
+    box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+
+  .schedule-table.edit-table .player-lane-cell.drop-zone {
+    position: relative;
+  }
+
+  .schedule-table.edit-table tr.drop-target-nem1 td:not(.time-cell):not(.divider-cell):not(.total-cell) {
+    background: rgba(59, 130, 246, 0.2);
+  }
+
+  .schedule-table.edit-table tr.drop-target-nem2 td:not(.time-cell):not(.divider-cell):not(.total-cell) {
+    background: rgba(139, 92, 246, 0.2);
+  }
 
   /* Player Chip */
   .player-chip {
@@ -622,7 +784,7 @@
 
 <div class="container">
   <div class="header">
-    <h1>🌙 달 길드 레이드</h1>
+    <h1>🌙 달 레기온</h1>
     <h2>파티 일정</h2>
     <div class="subtitle">등록 및 시간대별 참여 가능 인원</div>
   </div>
@@ -638,10 +800,9 @@
     <!-- 레이드 타입 탭 (동적 생성) -->
     <div class="raid-tabs" id="raid-tabs"></div>
 
-    <!-- 보기/편집 모드 토글 -->
-    <div class="mode-toggle">
-      <button class="mode-toggle-btn active" onclick="setMode('view')">👁️ 보기 모드</button>
-      <button class="mode-toggle-btn" onclick="setMode('edit')">✏️ 편집 모드</button>
+    <!-- 편집 모드 버튼 -->
+    <div class="edit-mode-bar">
+      <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">✏️ 편집 모드</button>
     </div>
 
     <!-- 요일 탭 -->
@@ -654,6 +815,20 @@
         <p style="margin-top: 16px;">데이터 불러오는 중...</p>
       </div>
     </div>
+
+    <!-- 이동 컨트롤 (편집모드) -->
+    <div class="move-controls" id="move-controls">
+      <span id="selected-count">0개 선택됨</span>
+      <span class="hint-text">드래그하여 1넴/2넴으로 이동 | Delete: 비활성화 | Ctrl+Del: 선택 외 비활성화 | Ctrl+Z: 되돌리기</span>
+      <button class="move-btn cancel" onclick="clearSelection()">선택 취소</button>
+    </div>
+    <div class="edit-hint" id="edit-hint" style="display:none;">💡 Ctrl + 드래그로 여러 칩 선택</div>
+
+    <!-- 선택 박스 오버레이 -->
+    <div class="selection-box" id="selection-box"></div>
+    
+    <!-- 드래그 중 고스트 -->
+    <div class="drag-ghost" id="drag-ghost"></div>
 
     <!-- 범례 -->
     <div class="legend">
@@ -832,15 +1007,6 @@ function selectRaidType(type) {
   renderNotes();
 }
 
-// 모드 변경
-function setMode(mode) {
-  currentMode = mode;
-  document.querySelectorAll('.mode-toggle-btn').forEach((btn, idx) => {
-    btn.classList.toggle('active', (mode === 'view' && idx === 0) || (mode === 'edit' && idx === 1));
-  });
-  renderSchedule();
-}
-
 // 요일 선택
 function selectDay(day) {
   currentDay = day;
@@ -978,18 +1144,9 @@ async function loadPlayerList() {
 function renderDayTabs() {
   const container = document.getElementById('day-tabs');
   
-  const counts = {};
-  DAYS.forEach(day => {
-    counts[day] = allPlayers.filter(p => 
-      p.레이드종류 === currentRaidType && 
-      !p.못하는요일.includes(day)
-    ).length;
-  });
-  
   container.innerHTML = DAYS.map(day => `
     <div class="day-tab ${day === currentDay ? 'active' : ''}" data-day="${day}" onclick="selectDay('${day}')">
       ${day}
-      <span class="count">${counts[day]}</span>
     </div>
   `).join('');
 }
@@ -1003,73 +1160,103 @@ function renderSchedule() {
     !p.못하는요일.includes(currentDay)
   );
   
-  const nem1 = filtered.filter(p => p.네임드 === '1넴');
-  const nem2 = filtered.filter(p => p.네임드 === '2넴');
-  
   if (currentMode === 'view') {
-    renderViewMode(container, nem1, nem2);
+    renderViewMode(container, filtered);
   } else {
-    renderEditMode(container, nem1, nem2);
+    renderEditMode(container, filtered);
   }
 }
 
-// 보기 모드 - 테이블 구조 유지 + 세로 블록
-function renderViewMode(container, nem1, nem2) {
+// 시간대별 네임드 확인
+function getPlayerNemAtTime(player, timeIdx) {
+  if (player.timeNemMap && player.timeNemMap[timeIdx] !== undefined) {
+    return player.timeNemMap[timeIdx];
+  }
+  return player.네임드; // 기본값
+}
+
+// 보기 모드 - 시간대별 네임드 지원
+function renderViewMode(container, players) {
   const ROW_HEIGHT = 44;
   
-  const processPlayers = (players) => {
-    return players.map(p => {
-      const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
-      return { ...p, startIdx, endIdx };
-    });
+  // 플레이어별로 연속된 네임드 구간(세그먼트)으로 분리
+  const createSegments = (player) => {
+    const { startIdx, endIdx } = getTimeRange(player.시작시간, player.종료시간);
+    const segments = [];
+    let currentSeg = null;
+    
+    for (let t = startIdx; t <= endIdx; t++) {
+      // hidden 체크
+      if (player.hiddenTimes && player.hiddenTimes.includes(t)) {
+        if (currentSeg) {
+          segments.push(currentSeg);
+          currentSeg = null;
+        }
+        continue;
+      }
+      
+      const nem = getPlayerNemAtTime(player, t);
+      
+      if (!currentSeg || currentSeg.nem !== nem) {
+        if (currentSeg) segments.push(currentSeg);
+        currentSeg = { ...player, nem, startIdx: t, endIdx: t };
+      } else {
+        currentSeg.endIdx = t;
+      }
+    }
+    if (currentSeg) segments.push(currentSeg);
+    
+    return segments;
   };
   
-  const nem1Processed = processPlayers(nem1);
-  const nem2Processed = processPlayers(nem2);
+  // 모든 플레이어의 세그먼트 생성
+  const allSegments = players.flatMap(createSegments);
+  const nem1Segs = allSegments.filter(s => s.nem === '1넴');
+  const nem2Segs = allSegments.filter(s => s.nem === '2넴');
   
   // 레인 배치 (겹침 처리)
-  const assignLanes = (players) => {
-    if (players.length === 0) return { players: [], laneCount: 0 };
-    const sorted = [...players].sort((a, b) => a.startIdx - b.startIdx);
+  const assignLanes = (segs) => {
+    if (segs.length === 0) return { segments: [], laneCount: 0 };
+    const sorted = [...segs].sort((a, b) => a.startIdx - b.startIdx);
     const lanes = [];
-    sorted.forEach(player => {
+    sorted.forEach(seg => {
       let assignedLane = -1;
       for (let i = 0; i < lanes.length; i++) {
-        if (lanes[i] < player.startIdx) { assignedLane = i; break; }
+        if (lanes[i] < seg.startIdx) { assignedLane = i; break; }
       }
       if (assignedLane === -1) { assignedLane = lanes.length; lanes.push(-1); }
-      player.lane = assignedLane;
-      lanes[assignedLane] = player.endIdx;
+      seg.lane = assignedLane;
+      lanes[assignedLane] = seg.endIdx;
     });
-    return { players: sorted, laneCount: lanes.length || 1 };
+    return { segments: sorted, laneCount: lanes.length || 1 };
   };
   
-  const nem1Lanes = assignLanes(nem1Processed);
-  const nem2Lanes = assignLanes(nem2Processed);
+  const nem1Lanes = assignLanes(nem1Segs);
+  const nem2Lanes = assignLanes(nem2Segs);
   
   // 시간별 활동 인원 수
-  const getActiveCount = (players, timeIdx) => {
-    return players.filter(p => timeIdx >= p.startIdx && timeIdx <= p.endIdx).length;
+  const getActiveCount = (segs, timeIdx) => {
+    return segs.filter(s => timeIdx >= s.startIdx && timeIdx <= s.endIdx).length;
   };
   
   // 블록 렌더링
   const renderBlocks = (laneData, laneWidth) => {
-    if (laneData.players.length === 0) return '';
-    return laneData.players.map(p => {
-      const jobInfo = getJobInfo(p.직업);
-      const top = p.startIdx * ROW_HEIGHT;
-      const height = (p.endIdx - p.startIdx + 1) * ROW_HEIGHT - 4;
-      const left = p.lane * laneWidth + 2;
+    if (laneData.segments.length === 0) return '';
+    return laneData.segments.map(s => {
+      const jobInfo = getJobInfo(s.직업);
+      const top = s.startIdx * ROW_HEIGHT;
+      const height = (s.endIdx - s.startIdx + 1) * ROW_HEIGHT - 4;
+      const left = s.lane * laneWidth + 2;
       const width = laneWidth - 4;
-      return `<div class="timeline-block ${jobInfo.class}" style="top:${top}px; height:${height}px; left:${left}px; width:${width}px;" title="${p.참고사항 || ''}">
-        <span class="job-icon">${jobInfo.icon}</span>${p.닉네임}
+      return `<div class="timeline-block ${jobInfo.class}" style="top:${top}px; height:${height}px; left:${left}px; width:${width}px;" title="${s.참고사항 || ''}">
+        <span class="job-icon">${jobInfo.icon}</span>${s.닉네임}
       </div>`;
     }).join('');
   };
   
   // 행 생성
   const rows = TIME_ORDER.map((_, idx) => {
-    const total = getActiveCount(nem1Processed, idx) + getActiveCount(nem2Processed, idx);
+    const total = getActiveCount(nem1Segs, idx) + getActiveCount(nem2Segs, idx);
     const highlightClass = total >= 8 ? 'highlight' : '';
     return `<tr style="height:${ROW_HEIGHT}px;">
       <td class="time-cell">${TIME_LABELS[idx]}</td>
@@ -1119,53 +1306,118 @@ function renderViewMode(container, nem1, nem2) {
   }
 }
 
-// 편집 모드 - 각 시간마다 반복 표시
-function renderEditMode(container, nem1, nem2) {
-  const getPlayersAtTime = (players, timeIdx) => {
-    return players.filter(p => {
-      const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
-      return timeIdx >= startIdx && timeIdx <= endIdx;
+// 편집 모드 - 시간대별 네임드 지원
+function renderEditMode(container, players) {
+  // 플레이어에 시간 정보 추가
+  const processedPlayers = players.map(p => {
+    const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
+    return { ...p, startIdx, endIdx };
+  });
+  
+  // 특정 시간대에 특정 네임드로 활동 중인 플레이어들
+  const getPlayersAtTimeForNem = (timeIdx, nemType) => {
+    return processedPlayers.filter(p => {
+      if (timeIdx < p.startIdx || timeIdx > p.endIdx) return false;
+      return getPlayerNemAtTime(p, timeIdx) === nemType;
     });
   };
   
-  const renderPlayers = (players) => {
-    if (players.length === 0) return '<span class="empty-cell">-</span>';
-    return `<div class="players-wrap">${players.map(p => {
-      const jobInfo = getJobInfo(p.직업);
-      return `<span class="player-chip ${jobInfo.class}" title="${p.참고사항 || ''}">
-        <span class="job-icon">${jobInfo.icon}</span>${p.닉네임}
-      </span>`;
-    }).join('')}</div>`;
+  // 네임드별 고유 플레이어 목록 (레인 배치용)
+  const getUniquePlayersForNem = (nemType) => {
+    const seen = new Set();
+    const result = [];
+    processedPlayers.forEach(p => {
+      if (seen.has(p.닉네임)) return;
+      // 이 플레이어가 해당 네임드에 한 번이라도 속하는지
+      for (let t = p.startIdx; t <= p.endIdx; t++) {
+        if (getPlayerNemAtTime(p, t) === nemType) {
+          seen.add(p.닉네임);
+          result.push(p);
+          break;
+        }
+      }
+    });
+    return result;
   };
   
-  const rows = TIME_ORDER.map((time, idx) => {
-    const nem1Players = getPlayersAtTime(nem1, idx);
-    const nem2Players = getPlayersAtTime(nem2, idx);
-    const total = nem1Players.length + nem2Players.length;
+  const nem1Players = getUniquePlayersForNem('1넴');
+  const nem2Players = getUniquePlayersForNem('2넴');
+  
+  // 플레이어별 레인 인덱스 매핑
+  const nem1LaneMap = {};
+  nem1Players.forEach((p, idx) => nem1LaneMap[p.닉네임] = idx);
+  const nem2LaneMap = {};
+  nem2Players.forEach((p, idx) => nem2LaneMap[p.닉네임] = idx);
+  
+  // 셀 렌더링
+  const renderCells = (timeIdx, nemType, laneMap, laneCount) => {
+    if (laneCount === 0) return '<td class="players-cell"><span class="empty-cell">-</span></td>';
     
+    const playersAtTime = getPlayersAtTimeForNem(timeIdx, nemType);
+    const cells = new Array(laneCount).fill(null);
+    
+    playersAtTime.forEach(p => {
+      const lane = laneMap[p.닉네임];
+      if (lane !== undefined) cells[lane] = p;
+    });
+    
+    return cells.map((p, lane) => {
+      if (p) {
+        const jobInfo = getJobInfo(p.직업);
+        const isHidden = p.hiddenTimes && p.hiddenTimes.includes(timeIdx);
+        const disabledClass = isHidden ? 'disabled' : '';
+        return `<td class="player-lane-cell">
+          <span class="player-chip ${jobInfo.class} ${disabledClass}" 
+                data-player="${p.닉네임}" 
+                data-nem="${nemType}" 
+                data-time="${timeIdx}"
+                title="${p.참고사항 || ''}">
+            <span class="job-icon">${jobInfo.icon}</span>${p.닉네임}
+          </span>
+        </td>`;
+      } else {
+        return '<td class="player-lane-cell empty"></td>';
+      }
+    }).join('');
+  };
+  
+  // 시간별 활동 인원 수 (hiddenTimes 제외)
+  const getActiveCount = (timeIdx, nemType) => {
+    return getPlayersAtTimeForNem(timeIdx, nemType).filter(p => {
+      if (p.hiddenTimes && p.hiddenTimes.includes(timeIdx)) return false;
+      return true;
+    }).length;
+  };
+  
+  const nem1LaneCount = nem1Players.length || 1;
+  const nem2LaneCount = nem2Players.length || 1;
+  
+  const rows = TIME_ORDER.map((_, idx) => {
+    const total = getActiveCount(idx, '1넴') + getActiveCount(idx, '2넴');
+    const highlightClass = total >= 8 ? 'highlight' : '';
     return `
       <tr>
         <td class="time-cell">${TIME_LABELS[idx]}</td>
-        <td class="players-cell">${renderPlayers(nem1Players)}</td>
-        <td class="players-cell">${renderPlayers(nem2Players)}</td>
-        <td class="total-cell">${total}명</td>
+        ${renderCells(idx, '1넴', nem1LaneMap, nem1Players.length)}
+        <td class="divider-cell"></td>
+        ${renderCells(idx, '2넴', nem2LaneMap, nem2Players.length)}
+        <td class="total-cell ${highlightClass}">${total}명</td>
       </tr>
     `;
   }).join('');
   
   container.innerHTML = `
-    <table class="schedule-table">
+    <table class="schedule-table edit-table">
       <thead>
         <tr>
-          <th>시간</th>
-          <th class="nem1">1️⃣ 1넴</th>
-          <th class="nem2">2️⃣ 2넴</th>
+          <th class="time-header">시간</th>
+          <th class="nem1" colspan="${nem1LaneCount}">1️⃣ 1넴</th>
+          <th class="divider-header"></th>
+          <th class="nem2" colspan="${nem2LaneCount}">2️⃣ 2넴</th>
           <th class="total">합계</th>
         </tr>
       </thead>
-      <tbody>
-        ${rows}
-      </tbody>
+      <tbody>${rows}</tbody>
     </table>
   `;
 }
@@ -1319,8 +1571,362 @@ async function submitForm() {
   }
 }
 
+// ============================================
+// 박스 선택, 드래그 드롭, 비활성화, Undo
+// ============================================
+// selectedChips: "닉네임|시간인덱스" 형태로 저장
+let selectedChips = new Set();
+let isSelecting = false;
+let selectionStart = { x: 0, y: 0 };
+let isDragging = false;
+let undoStack = [];
+const MAX_UNDO = 50;
+
+// 상태 저장 (Undo용)
+function saveState() {
+  const state = allPlayers.map(p => ({
+    닉네임: p.닉네임,
+    네임드: p.네임드,
+    timeNemMap: p.timeNemMap ? {...p.timeNemMap} : {},
+    hiddenTimes: p.hiddenTimes ? [...p.hiddenTimes] : []
+  }));
+  undoStack.push(JSON.stringify(state));
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+}
+
+// Undo 실행
+function undo() {
+  if (undoStack.length === 0) return;
+  const state = JSON.parse(undoStack.pop());
+  state.forEach(saved => {
+    const player = allPlayers.find(p => p.닉네임 === saved.닉네임);
+    if (player) {
+      player.네임드 = saved.네임드;
+      player.timeNemMap = saved.timeNemMap || {};
+      player.hiddenTimes = saved.hiddenTimes || [];
+    }
+  });
+  clearSelection();
+  renderSchedule();
+}
+
+// 편집 모드 토글
+function toggleEditMode() {
+  const btn = document.getElementById('edit-mode-btn');
+  
+  if (currentMode === 'view') {
+    currentMode = 'edit';
+    btn.textContent = '✅ 편집 완료';
+    btn.classList.add('active');
+    document.getElementById('edit-hint').style.display = 'block';
+  } else {
+    currentMode = 'view';
+    btn.textContent = '✏️ 편집 모드';
+    btn.classList.remove('active');
+    document.getElementById('edit-hint').style.display = 'none';
+    clearSelection();
+  }
+  
+  renderSchedule();
+}
+
+// 선택 초기화
+function clearSelection() {
+  selectedChips.clear();
+  document.querySelectorAll('.player-chip.selected').forEach(chip => {
+    chip.classList.remove('selected');
+  });
+  updateMoveControls();
+}
+
+// 이동 컨트롤 업데이트
+function updateMoveControls() {
+  const controls = document.getElementById('move-controls');
+  const countEl = document.getElementById('selected-count');
+  
+  // 선택된 고유 플레이어 수 계산
+  const uniquePlayers = new Set();
+  selectedChips.forEach(key => {
+    const [name] = key.split('|');
+    uniquePlayers.add(name);
+  });
+  
+  if (selectedChips.size > 0) {
+    controls.classList.add('active');
+    countEl.textContent = `${uniquePlayers.size}명 (${selectedChips.size}칸) 선택됨`;
+  } else {
+    controls.classList.remove('active');
+  }
+}
+
+// 선택된 칩들 이동 (시간대별)
+function moveSelectedTo(targetNem) {
+  if (selectedChips.size === 0) return;
+  
+  saveState();
+  
+  // 선택된 시간대들의 네임드 변경
+  selectedChips.forEach(key => {
+    const [name, timeIdxStr] = key.split('|');
+    const timeIdx = parseInt(timeIdxStr);
+    const player = allPlayers.find(p => p.닉네임 === name);
+    
+    if (player) {
+      if (!player.timeNemMap) player.timeNemMap = {};
+      player.timeNemMap[timeIdx] = targetNem;
+    }
+  });
+  
+  clearSelection();
+  renderSchedule();
+}
+
+// 선택된 칩들 비활성화 (Delete)
+function disableSelected() {
+  if (selectedChips.size === 0) return;
+  
+  saveState();
+  
+  // 플레이어별로 선택된 시간대 수집
+  const playerTimes = {};
+  selectedChips.forEach(key => {
+    const [name, timeIdx] = key.split('|');
+    if (!playerTimes[name]) playerTimes[name] = [];
+    playerTimes[name].push(parseInt(timeIdx));
+  });
+  
+  // 각 플레이어의 선택된 시간대 토글
+  Object.entries(playerTimes).forEach(([name, times]) => {
+    const player = allPlayers.find(p => p.닉네임 === name);
+    if (player) {
+      if (!player.hiddenTimes) player.hiddenTimes = [];
+      
+      // 선택된 시간들이 이미 다 숨겨져 있으면 복원, 아니면 숨김
+      const allHidden = times.every(t => player.hiddenTimes.includes(t));
+      if (allHidden) {
+        player.hiddenTimes = player.hiddenTimes.filter(t => !times.includes(t));
+      } else {
+        times.forEach(t => {
+          if (!player.hiddenTimes.includes(t)) player.hiddenTimes.push(t);
+        });
+      }
+    }
+  });
+  
+  clearSelection();
+  renderSchedule();
+}
+
+// 선택영역 외 비활성화 (Ctrl+Delete)
+function disableUnselected() {
+  if (selectedChips.size === 0) return;
+  
+  saveState();
+  
+  // 플레이어별로 선택된 시간대 수집
+  const playerSelectedTimes = {};
+  selectedChips.forEach(key => {
+    const [name, timeIdx] = key.split('|');
+    if (!playerSelectedTimes[name]) playerSelectedTimes[name] = [];
+    playerSelectedTimes[name].push(parseInt(timeIdx));
+  });
+  
+  // 선택된 플레이어들만 처리
+  Object.entries(playerSelectedTimes).forEach(([name, selectedTimes]) => {
+    const player = allPlayers.find(p => p.닉네임 === name);
+    if (player) {
+      const { startIdx, endIdx } = getTimeRange(player.시작시간, player.종료시간);
+      
+      // 선택되지 않은 시간대를 hidden으로
+      player.hiddenTimes = [];
+      for (let t = startIdx; t <= endIdx; t++) {
+        if (!selectedTimes.includes(t)) {
+          player.hiddenTimes.push(t);
+        }
+      }
+    }
+  });
+  
+  clearSelection();
+  renderSchedule();
+}
+
+// 키보드 이벤트
+document.addEventListener('keydown', (e) => {
+  // ESC: 선택 취소
+  if (e.key === 'Escape') {
+    clearSelection();
+    return;
+  }
+  
+  // Ctrl+Z: 선택 있으면 선택 취소, 없으면 되돌리기
+  if (e.ctrlKey && e.key === 'z') {
+    e.preventDefault();
+    if (selectedChips.size > 0) {
+      clearSelection();
+    } else {
+      undo();
+    }
+    return;
+  }
+  
+  // Delete 관련
+  if (e.key === 'Delete' && currentMode === 'edit' && selectedChips.size > 0) {
+    e.preventDefault();
+    if (e.ctrlKey) {
+      disableUnselected(); // Ctrl+Delete: 선택영역 외 비활성화
+    } else {
+      disableSelected(); // Delete: 선택영역 비활성화
+    }
+  }
+});
+
+// ============================================
+// 박스 선택 이벤트 (Ctrl+드래그)
+// ============================================
+document.addEventListener('mousedown', (e) => {
+  if (currentMode !== 'edit') return;
+  
+  // Ctrl+드래그: 박스 선택
+  if (e.ctrlKey && !isDragging) {
+    isSelecting = true;
+    selectionStart = { x: e.clientX, y: e.clientY };
+    
+    const box = document.getElementById('selection-box');
+    box.style.left = e.clientX + 'px';
+    box.style.top = e.clientY + 'px';
+    box.style.width = '0';
+    box.style.height = '0';
+    box.style.display = 'block';
+    
+    e.preventDefault();
+    return;
+  }
+  
+  // 선택된 칩 위에서 드래그 시작 (이동용)
+  const chip = e.target.closest('.player-chip.selected');
+  if (chip && selectedChips.size > 0) {
+    isDragging = true;
+    
+    const uniquePlayers = new Set();
+    selectedChips.forEach(key => uniquePlayers.add(key.split('|')[0]));
+    
+    const ghost = document.getElementById('drag-ghost');
+    ghost.textContent = `${uniquePlayers.size}명 이동`;
+    ghost.style.left = e.clientX + 10 + 'px';
+    ghost.style.top = e.clientY + 10 + 'px';
+    ghost.style.display = 'block';
+    
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('mousemove', (e) => {
+  // 박스 선택 중
+  if (isSelecting) {
+    const box = document.getElementById('selection-box');
+    const x = Math.min(e.clientX, selectionStart.x);
+    const y = Math.min(e.clientY, selectionStart.y);
+    const w = Math.abs(e.clientX - selectionStart.x);
+    const h = Math.abs(e.clientY - selectionStart.y);
+    
+    box.style.left = x + 'px';
+    box.style.top = y + 'px';
+    box.style.width = w + 'px';
+    box.style.height = h + 'px';
+    return;
+  }
+  
+  // 드래그 이동 중
+  if (isDragging) {
+    const ghost = document.getElementById('drag-ghost');
+    ghost.style.left = e.clientX + 10 + 'px';
+    ghost.style.top = e.clientY + 10 + 'px';
+    
+    // 드롭 영역 하이라이트
+    document.querySelectorAll('.nem1, .nem2').forEach(el => el.classList.remove('drop-hover'));
+    
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (target) {
+      const th = target.closest('th.nem1, th.nem2');
+      if (th) th.classList.add('drop-hover');
+    }
+  }
+});
+
+document.addEventListener('mouseup', (e) => {
+  // 박스 선택 완료
+  if (isSelecting) {
+    isSelecting = false;
+    
+    const box = document.getElementById('selection-box');
+    const boxRect = box.getBoundingClientRect();
+    box.style.display = 'none';
+    
+    // 박스 크기가 너무 작으면 무시
+    if (boxRect.width < 5 && boxRect.height < 5) return;
+    
+    // 박스 안의 칩들만 선택 (같은 이름이라도 전체 X)
+    document.querySelectorAll('.edit-table .player-chip').forEach(chip => {
+      const chipRect = chip.getBoundingClientRect();
+      
+      if (chipRect.left < boxRect.right && 
+          chipRect.right > boxRect.left &&
+          chipRect.top < boxRect.bottom && 
+          chipRect.bottom > boxRect.top) {
+        
+        const playerName = chip.dataset.player;
+        const timeIdx = chip.dataset.time;
+        if (playerName && timeIdx !== undefined) {
+          const key = `${playerName}|${timeIdx}`;
+          selectedChips.add(key);
+          chip.classList.add('selected');
+        }
+      }
+    });
+    
+    updateMoveControls();
+    return;
+  }
+  
+  // 드래그 드롭 완료
+  if (isDragging) {
+    isDragging = false;
+    
+    const ghost = document.getElementById('drag-ghost');
+    ghost.style.display = 'none';
+    
+    document.querySelectorAll('.nem1, .nem2').forEach(el => el.classList.remove('drop-hover'));
+    
+    // 드롭 영역 판별
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (target) {
+      // 헤더에 드롭
+      const th = target.closest('th.nem1, th.nem2');
+      if (th) {
+        const targetNem = th.classList.contains('nem1') ? '1넴' : '2넴';
+        moveSelectedTo(targetNem);
+        return;
+      }
+      
+      // 셀에 드롭
+      const cell = target.closest('td.player-lane-cell');
+      if (cell) {
+        const row = cell.closest('tr');
+        const dividerIdx = Array.from(row.children).findIndex(c => c.classList.contains('divider-cell'));
+        const cellIdx = Array.from(row.children).indexOf(cell);
+        const targetNem = cellIdx < dividerIdx ? '1넴' : '2넴';
+        moveSelectedTo(targetNem);
+        return;
+      }
+    }
+    
+    clearSelection();
+  }
+});
+
 // 초기 로드
-loadPlayerList();
+initViewPanel();
 </script>
 
 </body>
