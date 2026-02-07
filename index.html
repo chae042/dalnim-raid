@@ -1050,7 +1050,7 @@
       <span class="hint-text">드래그하여 1넴/2넴으로 이동 | Delete: 비활성화 | Ctrl+Del: 선택 외 비활성화 | Ctrl+Z: 되돌리기</span>
       <button class="move-btn cancel" onclick="clearSelection()">선택 취소</button>
     </div>
-    <div class="edit-hint" id="edit-hint" style="display:none;">💡 Ctrl + 드래그로 여러 칩 선택</div>
+    <div class="edit-hint" id="edit-hint" style="display:none;">💡 빈 공간 드래그로 여러 칩 선택</div>
 
     <!-- 선택 박스 오버레이 -->
     <div class="selection-box" id="selection-box"></div>
@@ -2106,28 +2106,12 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================
-// 박스 선택 이벤트 (Ctrl+드래그)
+// 박스 선택 이벤트 (드래그)
 // ============================================
 document.addEventListener('mousedown', (e) => {
   if (currentMode !== 'edit') return;
   
-  // Ctrl+드래그: 박스 선택
-  if (e.ctrlKey && !isDragging) {
-    isSelecting = true;
-    selectionStart = { x: e.clientX, y: e.clientY };
-    
-    const box = document.getElementById('selection-box');
-    box.style.left = e.clientX + 'px';
-    box.style.top = e.clientY + 'px';
-    box.style.width = '0';
-    box.style.height = '0';
-    box.style.display = 'block';
-    
-    e.preventDefault();
-    return;
-  }
-  
-  // 선택된 칩 위에서 드래그 시작 (이동용)
+  // 선택된 칩 위에서 드래그 시작 (이동용) - 먼저 체크
   const chip = e.target.closest('.player-chip.selected');
   if (chip && selectedChips.size > 0) {
     isDragging = true;
@@ -2140,6 +2124,22 @@ document.addEventListener('mousedown', (e) => {
     ghost.style.left = e.clientX + 10 + 'px';
     ghost.style.top = e.clientY + 10 + 'px';
     ghost.style.display = 'block';
+    
+    e.preventDefault();
+    return;
+  }
+  
+  // 빈 공간에서 드래그: 박스 선택
+  if (!isDragging && !e.target.closest('.player-chip')) {
+    isSelecting = true;
+    selectionStart = { x: e.clientX, y: e.clientY };
+    
+    const box = document.getElementById('selection-box');
+    box.style.left = e.clientX + 'px';
+    box.style.top = e.clientY + 'px';
+    box.style.width = '0';
+    box.style.height = '0';
+    box.style.display = 'block';
     
     e.preventDefault();
   }
