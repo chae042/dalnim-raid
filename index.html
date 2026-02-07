@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>🌙 달님봇 - 파티 일정</title>
+<title>🌙 달님이 - 파티 일정</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
@@ -704,6 +704,39 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 
+  /* 우클릭 컨텍스트 메뉴 */
+  .context-menu {
+    position: fixed;
+    background: #1a1a2e;
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    padding: 4px 0;
+    min-width: 150px;
+    z-index: 2000;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  .context-menu-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #ccc;
+    transition: all 0.15s;
+  }
+
+  .context-menu-item:hover {
+    background: #2a2a4a;
+    color: #fff;
+  }
+
+  .context-menu-item:first-child {
+    border-radius: 8px 8px 0 0;
+  }
+
+  .context-menu-item:last-child {
+    border-radius: 0 0 8px 8px;
+  }
+
   /* 드롭 영역 하이라이트 */
   .schedule-table.edit-table th.nem1.drop-hover,
   .schedule-table.edit-table th.nem2.drop-hover,
@@ -1112,24 +1145,24 @@
 
   /* 모바일 모달 - 전체화면 앱 스타일 */
   .is-mobile .modal-overlay {
-    align-items: stretch;
-    padding: 0;
+    align-items: center;
+    padding: 20px;
   }
 
   .is-mobile .modal {
     width: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    height: 100%;
-    border-radius: 0;
+    max-width: 360px;
+    max-height: 90vh;
+    height: auto;
+    border-radius: 16px;
     padding: 0;
-    margin: 0;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
   }
 
   .is-mobile .modal-header {
-    padding: 20px;
+    padding: 20px 20px 16px;
     border-bottom: 1px solid #2a2a4a;
     margin-bottom: 0;
     flex-shrink: 0;
@@ -1148,11 +1181,11 @@
     flex: 1;
     overflow-y: auto;
     padding: 20px;
-    padding-bottom: 100px;
+    padding-bottom: 20px;
   }
 
   .is-mobile .modal-body label {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
     margin-bottom: 10px;
     color: #ccc;
@@ -1161,9 +1194,9 @@
   .is-mobile .modal-body input,
   .is-mobile .modal-body select {
     padding: 16px 14px;
-    font-size: 17px;
+    font-size: 18px;
     -webkit-appearance: none;
-    border-radius: 10px;
+    border-radius: 12px;
     background: #16213e;
   }
 
@@ -1183,22 +1216,26 @@
   }
 
   .is-mobile .modal-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
     padding: 16px 20px;
     background: #1a1a2e;
     border-top: 1px solid #2a2a4a;
     margin-top: 0;
-    gap: 12px;
+    gap: 10px;
+    flex-shrink: 0;
   }
 
   .is-mobile .modal-btn {
-    padding: 16px;
+    flex: 1;
+    padding: 16px 12px;
     font-size: 17px;
     font-weight: 600;
     border-radius: 10px;
+    min-width: 0;
+  }
+  
+  .is-mobile .modal-btn.danger {
+    background: #dc2626;
+    flex: 0.8;
   }
 
   .is-mobile .search-btn,
@@ -1411,7 +1448,7 @@
     <!-- 이동 컨트롤 (편집모드) -->
     <div class="move-controls" id="move-controls">
       <span id="selected-count">0개 선택됨</span>
-      <span class="hint-text">드래그하여 네임드 간 이동 | Delete: 비활성화 | Ctrl+Del: 선택 외 비활성화 | Ctrl+Z: 되돌리기</span>
+      <span class="hint-text">드래그하여 이동 | Delete: 비활성화 | 우클릭: 삭제</span>
       <button class="move-btn cancel" onclick="clearSelection()">선택 취소</button>
     </div>
     <div class="edit-hint" id="edit-hint" style="display:none;">💡 클릭으로 칩 선택, 드래그로 여러 개 선택, 빈 곳 클릭으로 해제</div>
@@ -1421,6 +1458,12 @@
     
     <!-- 드래그 중 고스트 -->
     <div class="drag-ghost" id="drag-ghost"></div>
+
+    <!-- 우클릭 컨텍스트 메뉴 -->
+    <div class="context-menu" id="context-menu" style="display:none;">
+      <div class="context-menu-item" onclick="hideContextMenu(); deleteSelectedPlayers();">🗑️ 참가자 삭제</div>
+      <div class="context-menu-item" onclick="hideContextMenu(); disableSelected();">👁️ 비활성화</div>
+    </div>
 
     <!-- 범례 -->
     <div class="legend">
@@ -1438,7 +1481,7 @@
     <div id="notes-section"></div>
 
     <div class="footer">
-      🌙 달님봇 · <span id="update-time"></span>
+      🌙 달님이 · <span id="update-time"></span>
     </div>
   </div>
 
@@ -1541,8 +1584,10 @@
         </div>
       </div>
       <div class="modal-footer">
+        <button class="modal-btn danger delete-btn" id="delete-registration-btn" onclick="deleteMyRegistration()" style="display:none;">삭제</button>
+        <div style="flex:1;"></div>
         <button class="modal-btn secondary" onclick="closeModal('register-modal')">취소</button>
-        <button class="modal-btn primary submit-btn" onclick="submitForm()">저장하기</button>
+        <button class="modal-btn primary submit-btn" onclick="submitForm()">저장</button>
       </div>
     </div>
   </div>
@@ -2088,6 +2133,7 @@ async function loadPlayerList() {
         }
         
         return {
+          id: player.id, // 노션 페이지 ID
           닉네임: props.닉네임?.title?.[0]?.text?.content || props.닉네임 || '???',
           직업: props.직업?.select?.name || props.직업 || '',
           네임드: props.네임드?.select?.name || props.네임드 || '',
@@ -2522,6 +2568,9 @@ function showMessage(elementId, type, text) {
 }
 
 // 내 정보 불러오기 - 수정됨
+// 현재 불러온 신청 정보 (삭제용)
+let loadedRegistrationId = null;
+
 async function loadMyInfo() {
   const nickname = document.getElementById('nickname').value.trim();
   if (!nickname) {
@@ -2532,6 +2581,10 @@ async function loadMyInfo() {
   const btn = document.querySelector('.search-btn');
   btn.disabled = true;
   btn.textContent = '검색 중...';
+  
+  // 삭제 버튼 초기화
+  loadedRegistrationId = null;
+  document.getElementById('delete-registration-btn').style.display = 'none';
 
   try {
     const response = await fetch(WEBHOOK_URL, {
@@ -2545,6 +2598,12 @@ async function loadMyInfo() {
     
     if (result.success && result.data) {
       const d = result.data;
+      
+      // 신청 ID 저장 (삭제용)
+      loadedRegistrationId = d.id;
+      if (loadedRegistrationId) {
+        document.getElementById('delete-registration-btn').style.display = 'block';
+      }
       
       // 폼 필드 채우기 (순서 중요: 레이드 → 네임드 옵션 업데이트 → 네임드 선택)
       document.getElementById('job').value = d.직업 || '';
@@ -2577,6 +2636,50 @@ async function loadMyInfo() {
   } finally {
     btn.disabled = false;
     btn.textContent = '불러오기';
+  }
+}
+
+// 내 신청 삭제
+async function deleteMyRegistration() {
+  const nickname = document.getElementById('nickname').value.trim();
+  
+  // loadedRegistrationId가 없으면 allPlayers에서 찾기
+  let playerId = loadedRegistrationId;
+  if (!playerId) {
+    const player = allPlayers.find(p => p.닉네임 === nickname);
+    playerId = player?.id;
+  }
+  
+  if (!playerId) {
+    showToast('삭제할 신청 정보를 찾을 수 없습니다', 'error');
+    return;
+  }
+  
+  const confirmed = await showConfirm(`${nickname}님의 참가 신청을 취소할까요?`);
+  if (!confirmed) return;
+  
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deletePlayer', id: playerId })
+    });
+    
+    if (response.ok) {
+      showToast('신청이 취소되었습니다', 'success');
+      closeModal('register-modal');
+      
+      // 로컬에서도 제거
+      const idx = allPlayers.findIndex(p => p.id === playerId);
+      if (idx !== -1) allPlayers.splice(idx, 1);
+      
+      loadedRegistrationId = null;
+      renderSchedule();
+    } else {
+      showToast('취소 실패', 'error');
+    }
+  } catch (error) {
+    showToast('취소 실패: ' + error.message, 'error');
   }
 }
 
@@ -2864,10 +2967,127 @@ function disableUnselected() {
   renderSchedule();
 }
 
+// 선택된 플레이어 DB에서 삭제
+async function deleteSelectedPlayers() {
+  if (selectedChips.size === 0) return;
+  
+  // 선택된 플레이어 닉네임들 수집
+  const playerNames = new Set();
+  selectedChips.forEach(key => {
+    const [name] = key.split('|');
+    playerNames.add(name);
+  });
+  
+  // 삭제할 플레이어 정보 수집
+  const playersToDelete = [];
+  playerNames.forEach(name => {
+    const player = allPlayers.find(p => p.닉네임 === name);
+    if (player && player.id) {
+      playersToDelete.push(player);
+    }
+  });
+  
+  if (playersToDelete.length === 0) {
+    showToast('삭제할 참가자 정보를 찾을 수 없습니다', 'error');
+    return;
+  }
+  
+  // 확인
+  const names = playersToDelete.map(p => p.닉네임).join(', ');
+  const confirmed = await showConfirm(`${names} 참가자를 삭제하시겠습니까?\n\n삭제된 데이터는 복구할 수 없습니다.`);
+  if (!confirmed) return;
+  
+  // 삭제 요청
+  let successCount = 0;
+  for (const player of playersToDelete) {
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deletePlayer', id: player.id })
+      });
+      
+      if (response.ok) {
+        successCount++;
+        // 로컬에서도 제거
+        const idx = allPlayers.findIndex(p => p.id === player.id);
+        if (idx !== -1) allPlayers.splice(idx, 1);
+      }
+    } catch (error) {
+      console.error('삭제 실패:', player.닉네임, error);
+    }
+  }
+  
+  if (successCount > 0) {
+    showToast(`${successCount}명 삭제됨`, 'success');
+    clearSelection();
+    renderSchedule();
+  } else {
+    showToast('삭제 실패', 'error');
+  }
+}
+
+// ============================================
+// 우클릭 컨텍스트 메뉴
+// ============================================
+function showContextMenu(e) {
+  const menu = document.getElementById('context-menu');
+  
+  // 화면 경계 체크
+  let x = e.clientX;
+  let y = e.clientY;
+  
+  menu.style.display = 'block';
+  const menuRect = menu.getBoundingClientRect();
+  
+  if (x + menuRect.width > window.innerWidth) {
+    x = window.innerWidth - menuRect.width - 10;
+  }
+  if (y + menuRect.height > window.innerHeight) {
+    y = window.innerHeight - menuRect.height - 10;
+  }
+  
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+}
+
+function hideContextMenu() {
+  document.getElementById('context-menu').style.display = 'none';
+}
+
+document.addEventListener('contextmenu', (e) => {
+  if (currentMode !== 'edit') return;
+  
+  const chip = e.target.closest('.player-chip');
+  if (chip) {
+    e.preventDefault();
+    
+    // 우클릭한 칩이 선택 안 돼있으면 그 칩만 선택
+    const nickname = chip.dataset.player;
+    const timeIdx = chip.dataset.time;
+    const key = `${nickname}|${timeIdx}`;
+    
+    if (!selectedChips.has(key)) {
+      clearSelection();
+      selectedChips.add(key);
+      chip.classList.add('selected');
+      updateMoveControls();
+    }
+    
+    showContextMenu(e);
+  }
+});
+
+// 다른 곳 클릭하면 메뉴 닫기
+document.addEventListener('click', () => {
+  hideContextMenu();
+});
+
 // 키보드 이벤트
 document.addEventListener('keydown', (e) => {
-  // ESC: 선택 취소
+  // ESC: 선택 취소 + 메뉴 닫기
   if (e.key === 'Escape') {
+    hideContextMenu();
     clearSelection();
     return;
   }
@@ -3116,6 +3336,10 @@ function openRegisterModal() {
   // 초기 네임드 옵션 설정
   updateNamedOptions();
   
+  // 삭제 버튼 초기화 (불러오기 전까지 숨김)
+  loadedRegistrationId = null;
+  document.getElementById('delete-registration-btn').style.display = 'none';
+  
   openModal('register-modal');
 }
 
@@ -3309,6 +3533,10 @@ async function saveRaidSettings() {
     return;
   }
   
+  // 기존 레이드 정보
+  const oldRaid = raidSettings.find(r => r.id === selectedId);
+  const oldName = oldRaid?.레이드명;
+  
   try {
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
@@ -3318,6 +3546,7 @@ async function saveRaidSettings() {
         data: {
           id: selectedId,
           레이드명: name,
+          oldName: oldName, // 이름 변경 시 참가자 연동용
           네임드수: namedCount,
           필요인원: required,
           활성화: true,
@@ -3329,6 +3558,13 @@ async function saveRaidSettings() {
     if (response.ok) {
       showToast('설정이 저장되었어요🌙', 'success');
       closeModal('raid-settings-modal');
+      
+      // 이름 변경 시 localStorage도 업데이트
+      if (oldName !== name && currentRaidType === oldName) {
+        currentRaidType = name;
+        localStorage.setItem('dalnim_lastRaid', name);
+      }
+      
       await loadRaidSettings();
       renderRaidTabs();
       renderSchedule();
