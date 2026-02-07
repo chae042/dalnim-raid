@@ -1,862 +1,1203 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>달 길드 레이드 일정</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Malgun Gothic', sans-serif;
-        }
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            color: #fff;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            color: #ffd700;
-            margin-bottom: 30px;
-            font-size: 28px;
-        }
-        
-        /* 메인 탭 (등록/일정보기) */
-        .main-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            overflow: hidden;
-            max-width: 400px;
-        }
-        .main-tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            background: #2a2a4a;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        .main-tab:hover {
-            background: #3a3a5a;
-        }
-        .main-tab.active {
-            background: #4a4a7a;
-            color: #ffd700;
-        }
-        .panel {
-            display: none;
-            background: #2a2a4a;
-            padding: 25px;
-            border-radius: 15px;
-        }
-        .panel.active {
-            display: block;
-        }
-        
-        /* 등록 폼 */
-        .register-panel {
-            max-width: 500px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 16px;
-            color: #ccc;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            border: none;
-            border-radius: 8px;
-            background: #1a1a2e;
-            color: #fff;
-        }
-        select {
-            width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            border: none;
-            border-radius: 8px;
-            background: #1a1a2e;
-            color: #fff;
-        }
-        .day-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .day-btn {
-            padding: 12px 18px;
-            font-size: 16px;
-            border: 2px solid #4a4a7a;
-            border-radius: 8px;
-            background: transparent;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .day-btn:hover {
-            border-color: #ffd700;
-        }
-        .day-btn.selected {
-            background: #ff6b6b;
-            border-color: #ff6b6b;
-            color: #fff;
-        }
-        .submit-btn {
-            width: 100%;
-            padding: 18px;
-            font-size: 20px;
-            font-weight: bold;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
-            color: #1a1a2e;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: transform 0.2s;
-        }
-        .submit-btn:hover {
-            transform: scale(1.02);
-        }
-        .submit-btn:disabled {
-            background: #666;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .search-box input {
-            flex: 1;
-        }
-        .search-btn {
-            padding: 15px 25px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            background: #4a4a7a;
-            color: #fff;
-            cursor: pointer;
-        }
-        .message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 16px;
-        }
-        .message.success { background: #2ecc71; }
-        .message.error { background: #e74c3c; }
-        .message.info { background: #3498db; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌙 달님봇 - 파티 일정</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
 
-        /* 레이드 타입 탭 */
-        .raid-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .raid-tab {
-            padding: 12px 24px;
-            background: #1a1a2e;
-            border: 2px solid #4a4a7a;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .raid-tab:hover {
-            border-color: #ffd700;
-        }
-        .raid-tab.active {
-            background: #ffd700;
-            color: #1a1a2e;
-            border-color: #ffd700;
-        }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* 요일 탭 */
-        .day-tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .day-tab {
-            padding: 10px 15px;
-            background: #1a1a2e;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-            min-width: 60px;
-            transition: all 0.3s;
-        }
-        .day-tab:hover {
-            background: #3a3a5a;
-        }
-        .day-tab.active {
-            background: #ffd700;
-            color: #1a1a2e;
-        }
-        .day-tab .day-name {
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .day-tab .day-count {
-            font-size: 20px;
-            font-weight: bold;
-        }
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    padding: 24px;
+    min-height: 100vh;
+  }
 
-        /* 시간 블록 뷰 */
-        .schedule-view {
-            display: flex;
-            gap: 20px;
-        }
-        .named-column {
-            flex: 1;
-            min-width: 0;
-        }
-        .named-header {
-            padding: 15px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 10px;
-        }
-        .named-header.named-1 {
-            background: #3b82f6;
-        }
-        .named-header.named-2 {
-            background: #8b5cf6;
-        }
-        .named-header.named-none {
-            background: #6b7280;
-        }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
 
-        /* 시간 그리드 */
-        .time-grid {
-            position: relative;
-            background: #1a1a2e;
-            border-radius: 8px;
-            min-height: 500px;
-        }
-        .time-row {
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid #2a2a4a;
-            min-height: 50px;
-            position: relative;
-        }
-        .time-label {
-            width: 70px;
-            padding: 10px;
-            font-size: 14px;
-            color: #888;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .time-content {
-            flex: 1;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            padding: 5px;
-            min-height: 40px;
-        }
+  .loading {
+    text-align: center;
+    padding: 60px;
+    color: #888;
+  }
 
-        /* 플레이어 블록 */
-        .player-block {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .player-block .job-icon {
-            font-size: 12px;
-        }
+  .loading .spinner {
+    font-size: 40px;
+    animation: spin 2s linear infinite;
+    display: inline-block;
+  }
 
-        /* 세로 블록 (시간 범위) */
-        .player-bar {
-            position: absolute;
-            left: 75px;
-            right: 5px;
-            border-radius: 6px;
-            padding: 8px;
-            font-size: 13px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            z-index: 10;
-            cursor: default;
-        }
-        .player-bar:hover {
-            z-index: 20;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-        }
-        .player-bar .bar-content {
-            writing-mode: horizontal-tb;
-        }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
 
-        /* 직업 색상 */
-        .job-수호성 { background: rgba(96, 165, 250, 0.9); color: #000; }
-        .job-검성 { background: rgba(248, 113, 113, 0.9); color: #000; }
-        .job-궁성 { background: rgba(251, 146, 60, 0.9); color: #000; }
-        .job-마도성 { background: rgba(192, 132, 252, 0.9); color: #000; }
-        .job-치유성 { background: rgba(74, 222, 128, 0.9); color: #000; }
-        .job-호법성 { background: rgba(250, 204, 21, 0.9); color: #000; }
-        .job-살성 { background: rgba(236, 72, 153, 0.9); color: #000; }
-        .job-정령성 { background: rgba(20, 184, 166, 0.9); color: #000; }
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
 
-        /* 시간 미정자 */
-        .job-unknown { background: rgba(107, 114, 128, 0.7); color: #fff; }
+  .header h1 {
+    font-size: 14px;
+    font-weight: 400;
+    color: #ffd700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
 
-        /* 범례 */
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-            padding: 15px;
-            background: #1a1a2e;
-            border-radius: 8px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 12px;
-        }
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
+  .header h2 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #888;
-        }
+  .header .subtitle {
+    font-size: 13px;
+    color: #888;
+  }
 
-        /* 합계 표시 */
-        .total-count {
-            text-align: center;
-            font-size: 16px;
-            color: #ffd700;
-            margin-bottom: 15px;
-        }
-    </style>
+  /* Main Tabs (등록/일정보기) */
+  .main-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    justify-content: center;
+  }
+
+  .main-tab {
+    padding: 14px 32px;
+    border-radius: 8px;
+    background: #16213e;
+    border: 1px solid #2a2a4a;
+    color: #888;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .main-tab:hover {
+    background: #1f2f5a;
+    color: #ccc;
+  }
+
+  .main-tab.active {
+    background: #ffd700;
+    color: #1a1a2e;
+    border-color: #ffd700;
+    font-weight: 700;
+  }
+
+  .panel {
+    display: none;
+  }
+
+  .panel.active {
+    display: block;
+  }
+
+  /* 등록 폼 */
+  .register-panel {
+    max-width: 500px;
+    margin: 0 auto;
+    background: #16213e;
+    padding: 24px;
+    border-radius: 12px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .form-group input[type="text"],
+  .form-group select {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    background: #1a1a2e;
+    color: #fff;
+    font-family: inherit;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #ffd700;
+  }
+
+  .search-box {
+    display: flex;
+    gap: 8px;
+  }
+
+  .search-box input {
+    flex: 1;
+  }
+
+  .search-btn {
+    padding: 14px 20px;
+    background: #2a2a4a;
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .search-btn:hover {
+    background: #3a3a5a;
+  }
+
+  .day-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .day-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+    border: 2px solid #2a2a4a;
+    border-radius: 8px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .day-btn:hover {
+    border-color: #ffd700;
+    color: #ffd700;
+  }
+
+  .day-btn.selected {
+    background: #ff6b6b;
+    border-color: #ff6b6b;
+    color: #fff;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    background: #ffd700;
+    color: #1a1a2e;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s;
+  }
+
+  .submit-btn:hover {
+    background: #ffed4a;
+    transform: translateY(-1px);
+  }
+
+  .submit-btn:disabled {
+    background: #444;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .message.success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+  .message.error { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid #e74c3c; }
+  .message.info { background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; }
+
+  /* Raid Type Tabs */
+  .raid-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+
+  .raid-tab {
+    padding: 10px 24px;
+    border-radius: 20px;
+    background: #16213e;
+    border: 1px solid #2a2a4a;
+    color: #888;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .raid-tab:hover {
+    border-color: #ffd700;
+    color: #ffd700;
+  }
+
+  .raid-tab.active {
+    background: #ffd700;
+    color: #1a1a2e;
+    border-color: #ffd700;
+    font-weight: 700;
+  }
+
+  /* View Mode Toggle */
+  .view-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+
+  .view-toggle-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid #2a2a4a;
+    color: #888;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+
+  .view-toggle-btn:hover {
+    border-color: #60a5fa;
+    color: #60a5fa;
+  }
+
+  .view-toggle-btn.active {
+    background: #60a5fa;
+    color: #fff;
+    border-color: #60a5fa;
+  }
+
+  /* Day Tabs */
+  .day-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    justify-content: center;
+  }
+
+  .day-tab {
+    padding: 14px 24px;
+    border-radius: 8px;
+    background: #16213e;
+    border: 1px solid #2a2a4a;
+    color: #888;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-align: center;
+    min-width: 85px;
+  }
+
+  .day-tab:hover {
+    background: #1f2f5a;
+    color: #ccc;
+  }
+
+  .day-tab.active {
+    background: #ffd700;
+    color: #1a1a2e;
+    border-color: #ffd700;
+    font-weight: 700;
+  }
+
+  .day-tab .count {
+    display: block;
+    font-size: 24px;
+    font-weight: 900;
+    margin-top: 2px;
+  }
+
+  .day-tab.active .count {
+    color: #1a1a2e;
+  }
+
+  /* Schedule Table */
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+
+  .schedule-table th {
+    background: #16213e;
+    padding: 16px 12px;
+    font-size: 18px;
+    font-weight: 700;
+    border-bottom: 2px solid #2a2a4a;
+  }
+
+  .schedule-table th.nem1 { color: #74b9ff; }
+  .schedule-table th.nem2 { color: #ff7675; }
+  .schedule-table th.total { color: #ffd700; }
+
+  .schedule-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #2a2a4a;
+    vertical-align: top;
+  }
+
+  .time-cell {
+    font-size: 18px;
+    font-weight: 700;
+    color: #666;
+    text-align: center;
+    width: 100px;
+  }
+
+  .players-cell {
+    min-width: 200px;
+    position: relative;
+  }
+
+  .players-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .total-cell {
+    text-align: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: #888;
+    width: 80px;
+  }
+
+  /* Player Chip */
+  .player-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    cursor: default;
+  }
+
+  .player-chip:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.2);
+  }
+
+  .player-chip .job-icon {
+    font-size: 10px;
+    opacity: 0.8;
+  }
+
+  /* Player Block (뷰 모드용 - 세로 병합) */
+  .player-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    margin: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .player-block .time-range {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-left: 4px;
+  }
+
+  /* Job Colors */
+  .job-tank {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
+  }
+
+  .job-melee {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
+  }
+
+  .job-ranged {
+    background: rgba(249, 115, 22, 0.2);
+    border-color: rgba(249, 115, 22, 0.4);
+    color: #fb923c;
+  }
+
+  .job-magic {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: #c084fc;
+  }
+
+  .job-assassin {
+    background: rgba(236, 72, 153, 0.2);
+    border-color: rgba(236, 72, 153, 0.4);
+    color: #ec4899;
+  }
+
+  .job-summoner {
+    background: rgba(20, 184, 166, 0.2);
+    border-color: rgba(20, 184, 166, 0.4);
+    color: #14b8a6;
+  }
+
+  .job-healer {
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #4ade80;
+  }
+
+  .job-support {
+    background: rgba(234, 179, 8, 0.2);
+    border-color: rgba(234, 179, 8, 0.4);
+    color: #facc15;
+  }
+
+  .empty-cell {
+    color: #444;
+    font-size: 12px;
+  }
+
+  .player-chip.no-time {
+    opacity: 0.4;
+    filter: grayscale(100%);
+  }
+
+  /* Block View - 블록 뷰 전용 스타일 */
+  .block-view {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .block-column {
+    flex: 1;
+    background: #16213e;
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .block-column-header {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #2a2a4a;
+  }
+
+  .block-column-header.nem1 { color: #74b9ff; }
+  .block-column-header.nem2 { color: #ff7675; }
+
+  .block-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .player-block-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+  }
+
+  .player-block-card .player-name {
+    font-weight: 600;
+    font-size: 16px;
+    flex: 1;
+  }
+
+  .player-block-card .player-time {
+    font-size: 13px;
+    opacity: 0.7;
+  }
+
+  .player-block-card .player-note {
+    font-size: 12px;
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 16px;
+    background: #16213e;
+    border-radius: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #888;
+  }
+
+  .legend-chip {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+  }
+
+  /* Notes */
+  .notes {
+    margin-top: 16px;
+    padding: 16px;
+    background: #16213e;
+    border-radius: 8px;
+    border-left: 3px solid #ffd700;
+  }
+
+  .notes h3 {
+    font-size: 13px;
+    color: #ffd700;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+
+  .note-item {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.8;
+  }
+
+  .note-item .name {
+    color: #ccc;
+    font-weight: 500;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 12px;
+    color: #444;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🌙 달 길드 레이드</h1>
-        
-        <div class="main-tabs">
-            <div class="main-tab active" onclick="showMainTab('register')">등록/수정</div>
-            <div class="main-tab" onclick="showMainTab('view')">일정 보기</div>
-        </div>
 
-        <!-- 등록/수정 패널 -->
-        <div id="register-panel" class="panel register-panel active">
-            <div id="register-message"></div>
-            
-            <div class="form-group">
-                <label>닉네임 *</label>
-                <div class="search-box">
-                    <input type="text" id="nickname" placeholder="캐릭터 이름">
-                    <button class="search-btn" onclick="loadMyInfo()">불러오기</button>
-                </div>
-            </div>
+<div class="container">
+  <div class="header">
+    <h1>🌙 달 길드 레이드</h1>
+    <h2>파티 일정</h2>
+    <div class="subtitle">등록 및 시간대별 참여 가능 인원</div>
+  </div>
 
-            <div class="form-group">
-                <label>직업 *</label>
-                <select id="job">
-                    <option value="">선택하세요</option>
-                    <option value="수호성">수호성</option>
-                    <option value="검성">검성</option>
-                    <option value="궁성">궁성</option>
-                    <option value="마도성">마도성</option>
-                    <option value="치유성">치유성</option>
-                    <option value="호법성">호법성</option>
-                    <option value="살성">살성</option>
-                    <option value="정령성">정령성</option>
-                </select>
-            </div>
+  <!-- 메인 탭 -->
+  <div class="main-tabs">
+    <div class="main-tab active" onclick="showMainTab('view')">📋 일정 보기</div>
+    <div class="main-tab" onclick="showMainTab('register')">✏️ 등록/수정</div>
+  </div>
 
-            <div class="form-group">
-                <label>네임드</label>
-                <select id="named">
-                    <option value="">선택하세요</option>
-                    <option value="1넴">1넴</option>
-                    <option value="2넴">2넴</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>시작 가능 시간</label>
-                <select id="startTime">
-                    <option value="상관없음">상관없음</option>
-                    <option value="PM 6">PM 6 (18시)</option>
-                    <option value="PM 7">PM 7 (19시)</option>
-                    <option value="PM 8">PM 8 (20시)</option>
-                    <option value="PM 9">PM 9 (21시)</option>
-                    <option value="PM 10">PM 10 (22시)</option>
-                    <option value="PM 11">PM 11 (23시)</option>
-                    <option value="AM 12">AM 12 (24시)</option>
-                    <option value="AM 1">AM 1 (01시)</option>
-                    <option value="AM 2">AM 2 (02시)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>종료 가능 시간</label>
-                <select id="endTime">
-                    <option value="상관없음">상관없음</option>
-                    <option value="PM 6">PM 6 (18시)</option>
-                    <option value="PM 7">PM 7 (19시)</option>
-                    <option value="PM 8">PM 8 (20시)</option>
-                    <option value="PM 9">PM 9 (21시)</option>
-                    <option value="PM 10">PM 10 (22시)</option>
-                    <option value="PM 11">PM 11 (23시)</option>
-                    <option value="AM 12">AM 12 (24시)</option>
-                    <option value="AM 1">AM 1 (01시)</option>
-                    <option value="AM 2">AM 2 (02시)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>레이드 종류</label>
-                <select id="raidType">
-                    <option value="트라이팟">트라이팟</option>
-                    <option value="클리어팟">클리어팟</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>못하는 요일 (클릭해서 선택)</label>
-                <div class="day-buttons">
-                    <button type="button" class="day-btn" data-day="월">월</button>
-                    <button type="button" class="day-btn" data-day="화">화</button>
-                    <button type="button" class="day-btn" data-day="수">수</button>
-                    <button type="button" class="day-btn" data-day="목">목</button>
-                    <button type="button" class="day-btn" data-day="금">금</button>
-                    <button type="button" class="day-btn" data-day="토">토</button>
-                    <button type="button" class="day-btn" data-day="일">일</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>참고사항</label>
-                <input type="text" id="note" placeholder="예: 금토만 가능, 24시 이전 선호">
-            </div>
-
-            <button class="submit-btn" onclick="submitForm()">저장하기</button>
-        </div>
-
-        <!-- 일정 보기 패널 -->
-        <div id="view-panel" class="panel">
-            <div id="view-message"></div>
-            
-            <!-- 레이드 타입 탭 -->
-            <div class="raid-tabs" id="raid-tabs">
-                <div class="raid-tab active" data-raid="트라이팟">트라이팟</div>
-                <div class="raid-tab" data-raid="클리어팟">클리어팟</div>
-            </div>
-
-            <!-- 요일 탭 -->
-            <div class="day-tabs" id="day-tabs"></div>
-
-            <!-- 합계 -->
-            <div class="total-count" id="total-count"></div>
-
-            <!-- 일정 뷰 -->
-            <div class="schedule-view" id="schedule-view">
-                <div class="loading">불러오는 중...</div>
-            </div>
-
-            <!-- 범례 -->
-            <div class="legend">
-                <div class="legend-item"><div class="legend-color" style="background:#60a5fa"></div>수호성</div>
-                <div class="legend-item"><div class="legend-color" style="background:#f87171"></div>검성</div>
-                <div class="legend-item"><div class="legend-color" style="background:#fb923c"></div>궁성</div>
-                <div class="legend-item"><div class="legend-color" style="background:#c084fc"></div>마도성</div>
-                <div class="legend-item"><div class="legend-color" style="background:#4ade80"></div>치유성</div>
-                <div class="legend-item"><div class="legend-color" style="background:#facc15"></div>호법성</div>
-                <div class="legend-item"><div class="legend-color" style="background:#ec4899"></div>살성</div>
-                <div class="legend-item"><div class="legend-color" style="background:#14b8a6"></div>정령성</div>
-            </div>
-        </div>
+  <!-- 일정 보기 패널 -->
+  <div id="view-panel" class="panel active">
+    <!-- 레이드 타입 탭 -->
+    <div class="raid-tabs">
+      <div class="raid-tab active" data-raid="트라이팟" onclick="selectRaidType('트라이팟')">트라이팟</div>
+      <div class="raid-tab" data-raid="클리어팟" onclick="selectRaidType('클리어팟')">클리어팟</div>
     </div>
 
-    <script>
-        const WEBHOOK_URL = 'https://n8n-production-f0a7.up.railway.app/webhook/raid';
-        
-        // 시간 순서 (인덱스로 위치 계산용)
-        const TIME_ORDER = ['PM 6', 'PM 7', 'PM 8', 'PM 9', 'PM 10', 'PM 11', 'AM 12', 'AM 1', 'AM 2'];
-        const TIME_LABELS = ['18시', '19시', '20시', '21시', '22시', '23시', '익일 00시', '익일 01시', '익일 02시'];
-        const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
-        
-        let allPlayers = [];
-        let currentRaidType = '트라이팟';
-        let currentDay = '금'; // 기본값
+    <!-- 뷰 모드 토글 -->
+    <div class="view-toggle">
+      <button class="view-toggle-btn active" onclick="setViewMode('block')">📊 블록 뷰</button>
+      <button class="view-toggle-btn" onclick="setViewMode('table')">📋 시간별 뷰</button>
+    </div>
 
-        // 메인 탭 전환
-        function showMainTab(tabName) {
-            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            
-            document.querySelector(`.main-tab:nth-child(${tabName === 'register' ? 1 : 2})`).classList.add('active');
-            document.getElementById(`${tabName}-panel`).classList.add('active');
-            
-            if (tabName === 'view') {
-                loadPlayerList();
-            }
+    <!-- 요일 탭 -->
+    <div class="day-tabs" id="day-tabs"></div>
+
+    <!-- 일정 뷰 -->
+    <div id="schedule-view">
+      <div class="loading">
+        <div class="spinner">🌙</div>
+        <p style="margin-top: 16px;">데이터 불러오는 중...</p>
+      </div>
+    </div>
+
+    <!-- 범례 -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(59, 130, 246, 0.4);"></div> 수호성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(239, 68, 68, 0.4);"></div> 검성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(249, 115, 22, 0.4);"></div> 궁성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(168, 85, 247, 0.4);"></div> 마도성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(34, 197, 94, 0.4);"></div> 치유성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(234, 179, 8, 0.4);"></div> 호법성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(236, 72, 153, 0.4);"></div> 살성</div>
+      <div class="legend-item"><div class="legend-chip" style="background: rgba(20, 184, 166, 0.4);"></div> 정령성</div>
+    </div>
+
+    <!-- 참고사항 -->
+    <div id="notes-section"></div>
+
+    <div class="footer">
+      🌙 달님봇 · <span id="update-time"></span>
+    </div>
+  </div>
+
+  <!-- 등록/수정 패널 -->
+  <div id="register-panel" class="panel">
+    <div class="register-panel">
+      <div id="register-message"></div>
+      
+      <div class="form-group">
+        <label>닉네임 *</label>
+        <div class="search-box">
+          <input type="text" id="nickname" placeholder="캐릭터 이름">
+          <button class="search-btn" onclick="loadMyInfo()">불러오기</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>직업 *</label>
+        <select id="job">
+          <option value="">선택하세요</option>
+          <option value="수호성">수호성</option>
+          <option value="검성">검성</option>
+          <option value="궁성">궁성</option>
+          <option value="마도성">마도성</option>
+          <option value="치유성">치유성</option>
+          <option value="호법성">호법성</option>
+          <option value="살성">살성</option>
+          <option value="정령성">정령성</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>네임드</label>
+        <select id="named">
+          <option value="">선택하세요</option>
+          <option value="1넴">1넴</option>
+          <option value="2넴">2넴</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>시작 가능 시간</label>
+        <select id="startTime">
+          <option value="상관없음">상관없음</option>
+          <option value="PM 6">PM 6 (18시)</option>
+          <option value="PM 7">PM 7 (19시)</option>
+          <option value="PM 8">PM 8 (20시)</option>
+          <option value="PM 9">PM 9 (21시)</option>
+          <option value="PM 10">PM 10 (22시)</option>
+          <option value="PM 11">PM 11 (23시)</option>
+          <option value="AM 12">AM 12 (24시)</option>
+          <option value="AM 1">AM 1 (01시)</option>
+          <option value="AM 2">AM 2 (02시)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>종료 가능 시간</label>
+        <select id="endTime">
+          <option value="상관없음">상관없음</option>
+          <option value="PM 6">PM 6 (18시)</option>
+          <option value="PM 7">PM 7 (19시)</option>
+          <option value="PM 8">PM 8 (20시)</option>
+          <option value="PM 9">PM 9 (21시)</option>
+          <option value="PM 10">PM 10 (22시)</option>
+          <option value="PM 11">PM 11 (23시)</option>
+          <option value="AM 12">AM 12 (24시)</option>
+          <option value="AM 1">AM 1 (01시)</option>
+          <option value="AM 2">AM 2 (02시)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>레이드 종류</label>
+        <select id="raidType">
+          <option value="트라이팟">트라이팟</option>
+          <option value="클리어팟">클리어팟</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>못하는 요일 (클릭해서 선택)</label>
+        <div class="day-buttons">
+          <button type="button" class="day-btn" data-day="월">월</button>
+          <button type="button" class="day-btn" data-day="화">화</button>
+          <button type="button" class="day-btn" data-day="수">수</button>
+          <button type="button" class="day-btn" data-day="목">목</button>
+          <button type="button" class="day-btn" data-day="금">금</button>
+          <button type="button" class="day-btn" data-day="토">토</button>
+          <button type="button" class="day-btn" data-day="일">일</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>참고사항</label>
+        <input type="text" id="note" placeholder="예: 금토만 가능, 24시 이전 선호">
+      </div>
+
+      <button class="submit-btn" onclick="submitForm()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WEBHOOK_URL = 'https://n8n-production-f0a7.up.railway.app/webhook/raid';
+const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const TIME_ORDER = ['PM 6', 'PM 7', 'PM 8', 'PM 9', 'PM 10', 'PM 11', 'AM 12', 'AM 1', 'AM 2'];
+const TIME_LABELS = ['18시', '19시', '20시', '21시', '22시', '23시', '익일 00시', '익일 01시', '익일 02시'];
+
+const JOB_MAP = {
+  '수호성': { class: 'job-tank', icon: '🛡' },
+  '검성': { class: 'job-melee', icon: '⚔️' },
+  '궁성': { class: 'job-ranged', icon: '🏹' },
+  '마도성': { class: 'job-magic', icon: '◆' },
+  '치유성': { class: 'job-healer', icon: '✚' },
+  '호법성': { class: 'job-support', icon: '◈' },
+  '살성': { class: 'job-assassin', icon: '🗡' },
+  '정령성': { class: 'job-summoner', icon: '🔮' },
+};
+
+let allPlayers = [];
+let currentDay = '금';
+let currentRaidType = '트라이팟';
+let viewMode = 'block'; // 'block' or 'table'
+
+// 메인 탭 전환
+function showMainTab(tabName) {
+  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  
+  const tabIndex = tabName === 'view' ? 0 : 1;
+  document.querySelectorAll('.main-tab')[tabIndex].classList.add('active');
+  document.getElementById(`${tabName}-panel`).classList.add('active');
+  
+  if (tabName === 'view') {
+    loadPlayerList();
+  }
+}
+
+// 레이드 타입 선택
+function selectRaidType(type) {
+  currentRaidType = type;
+  document.querySelectorAll('.raid-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.raid === type);
+  });
+  renderDayTabs();
+  renderSchedule();
+}
+
+// 뷰 모드 변경
+function setViewMode(mode) {
+  viewMode = mode;
+  document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.includes(mode === 'block' ? '블록' : '시간별'));
+  });
+  renderSchedule();
+}
+
+// 요일 선택
+function selectDay(day) {
+  currentDay = day;
+  document.querySelectorAll('.day-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.day === day);
+  });
+  renderSchedule();
+}
+
+// 직업 정보 가져오기
+function getJobInfo(job) {
+  return JOB_MAP[job] || { class: 'job-support', icon: '●' };
+}
+
+// 시간 인덱스 가져오기
+function getTimeIndex(timeStr) {
+  if (!timeStr || timeStr === '상관없음') return -1;
+  return TIME_ORDER.indexOf(timeStr);
+}
+
+// 시간 범위 계산
+function getTimeRange(startTime, endTime) {
+  let startIdx = getTimeIndex(startTime);
+  let endIdx = getTimeIndex(endTime);
+  
+  if (startIdx === -1) startIdx = 0;
+  if (endIdx === -1) endIdx = TIME_ORDER.length - 1;
+  if (endIdx < startIdx) endIdx = startIdx;
+  
+  return { startIdx, endIdx };
+}
+
+// 시간 라벨 가져오기
+function getTimeLabel(idx) {
+  return TIME_LABELS[idx] || '';
+}
+
+// 플레이어 목록 불러오기
+async function loadPlayerList() {
+  const container = document.getElementById('schedule-view');
+  container.innerHTML = `
+    <div class="loading">
+      <div class="spinner">🌙</div>
+      <p style="margin-top: 16px;">데이터 불러오는 중...</p>
+    </div>
+  `;
+
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list' })
+    });
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      allPlayers = result.data.map(player => {
+        const props = player.properties || player;
+        return {
+          닉네임: props.닉네임?.title?.[0]?.text?.content || props.닉네임 || '???',
+          직업: props.직업?.select?.name || props.직업 || '',
+          네임드: props.네임드?.select?.name || props.네임드 || '',
+          시작시간: props.시작시간?.select?.name || props.시작시간 || '상관없음',
+          종료시간: props.종료시간?.select?.name || props.종료시간 || '상관없음',
+          못하는요일: props.못하는요일?.multi_select?.map(m => m.name) || props.못하는요일 || [],
+          레이드종류: props.레이드종류?.select?.name || props.레이드종류 || '트라이팟',
+          참고사항: props.참고사항?.rich_text?.[0]?.text?.content || props.참고사항 || ''
+        };
+      });
+      
+      document.getElementById('update-time').textContent = new Date().toLocaleString('ko-KR');
+      renderDayTabs();
+      renderSchedule();
+      renderNotes();
+    } else {
+      container.innerHTML = '<div class="loading">등록된 참가자가 없습니다</div>';
+    }
+  } catch (error) {
+    container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${error.message}</div>`;
+  }
+}
+
+// 요일 탭 렌더링
+function renderDayTabs() {
+  const container = document.getElementById('day-tabs');
+  
+  const counts = {};
+  DAYS.forEach(day => {
+    counts[day] = allPlayers.filter(p => 
+      p.레이드종류 === currentRaidType && 
+      !p.못하는요일.includes(day)
+    ).length;
+  });
+  
+  container.innerHTML = DAYS.map(day => `
+    <div class="day-tab ${day === currentDay ? 'active' : ''}" data-day="${day}" onclick="selectDay('${day}')">
+      ${day}
+      <span class="count">${counts[day]}</span>
+    </div>
+  `).join('');
+}
+
+// 일정 렌더링
+function renderSchedule() {
+  const container = document.getElementById('schedule-view');
+  
+  const filtered = allPlayers.filter(p => 
+    p.레이드종류 === currentRaidType && 
+    !p.못하는요일.includes(currentDay)
+  );
+  
+  const nem1 = filtered.filter(p => p.네임드 === '1넴');
+  const nem2 = filtered.filter(p => p.네임드 === '2넴');
+  const nemNone = filtered.filter(p => !p.네임드);
+  
+  if (viewMode === 'block') {
+    renderBlockView(container, nem1, nem2, nemNone);
+  } else {
+    renderTableView(container, nem1, nem2);
+  }
+}
+
+// 블록 뷰 렌더링 (인원별 블록)
+function renderBlockView(container, nem1, nem2, nemNone) {
+  const renderPlayerBlock = (player) => {
+    const jobInfo = getJobInfo(player.직업);
+    const { startIdx, endIdx } = getTimeRange(player.시작시간, player.종료시간);
+    const timeRange = `${getTimeLabel(startIdx)} ~ ${getTimeLabel(endIdx)}`;
+    const noTime = player.시작시간 === '상관없음' && player.종료시간 === '상관없음';
+    
+    return `
+      <div class="player-block-card ${jobInfo.class}" title="${player.참고사항 || ''}">
+        <span class="job-icon">${jobInfo.icon}</span>
+        <span class="player-name">${player.닉네임}</span>
+        <span class="player-time">${noTime ? '시간 상관없음' : timeRange}</span>
+      </div>
+    `;
+  };
+  
+  container.innerHTML = `
+    <div class="block-view">
+      <div class="block-column">
+        <div class="block-column-header nem1">1️⃣ 1넴 (${nem1.length}명)</div>
+        <div class="block-list">
+          ${nem1.length > 0 ? nem1.map(renderPlayerBlock).join('') : '<div class="empty-cell">등록된 인원이 없습니다</div>'}
+        </div>
+      </div>
+      <div class="block-column">
+        <div class="block-column-header nem2">2️⃣ 2넴 (${nem2.length}명)</div>
+        <div class="block-list">
+          ${nem2.length > 0 ? nem2.map(renderPlayerBlock).join('') : '<div class="empty-cell">등록된 인원이 없습니다</div>'}
+        </div>
+      </div>
+    </div>
+    ${nemNone.length > 0 ? `
+      <div style="margin-top: 20px; padding: 16px; background: #16213e; border-radius: 12px;">
+        <div style="color: #888; margin-bottom: 12px; font-weight: 600;">⚪ 네임드 미정 (${nemNone.length}명)</div>
+        <div class="players-wrap">
+          ${nemNone.map(p => {
+            const jobInfo = getJobInfo(p.직업);
+            return `<span class="player-chip ${jobInfo.class}"><span class="job-icon">${jobInfo.icon}</span>${p.닉네임}</span>`;
+          }).join('')}
+        </div>
+      </div>
+    ` : ''}
+  `;
+}
+
+// 테이블 뷰 렌더링 (시간별)
+function renderTableView(container, nem1, nem2) {
+  // 시간별 플레이어 분류
+  const getPlayersAtTime = (players, timeIdx) => {
+    return players.filter(p => {
+      const { startIdx, endIdx } = getTimeRange(p.시작시간, p.종료시간);
+      return timeIdx >= startIdx && timeIdx <= endIdx;
+    });
+  };
+  
+  const renderPlayers = (players) => {
+    if (players.length === 0) return '<span class="empty-cell">-</span>';
+    return `<div class="players-wrap">${players.map(p => {
+      const jobInfo = getJobInfo(p.직업);
+      const noTime = p.시작시간 === '상관없음' && p.종료시간 === '상관없음';
+      const noTimeClass = noTime ? 'no-time' : '';
+      return `<span class="player-chip ${jobInfo.class} ${noTimeClass}" title="${p.참고사항 || ''}">
+        <span class="job-icon">${jobInfo.icon}</span>${p.닉네임}
+      </span>`;
+    }).join('')}</div>`;
+  };
+  
+  const rows = TIME_ORDER.map((time, idx) => {
+    const nem1Players = getPlayersAtTime(nem1, idx);
+    const nem2Players = getPlayersAtTime(nem2, idx);
+    const total = nem1Players.length + nem2Players.length;
+    
+    return `
+      <tr>
+        <td class="time-cell">${TIME_LABELS[idx]}</td>
+        <td class="players-cell">${renderPlayers(nem1Players)}</td>
+        <td class="players-cell">${renderPlayers(nem2Players)}</td>
+        <td class="total-cell">${total}명</td>
+      </tr>
+    `;
+  }).join('');
+  
+  container.innerHTML = `
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th>시간</th>
+          <th class="nem1">1️⃣ 1넴</th>
+          <th class="nem2">2️⃣ 2넴</th>
+          <th class="total">합계</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  `;
+}
+
+// 참고사항 렌더링
+function renderNotes() {
+  const notes = allPlayers
+    .filter(p => p.참고사항 && p.레이드종류 === currentRaidType)
+    .map(p => ({ name: p.닉네임, note: p.참고사항 }));
+  
+  const container = document.getElementById('notes-section');
+  
+  if (notes.length > 0) {
+    container.innerHTML = `
+      <div class="notes">
+        <h3>📌 참고 사항</h3>
+        ${notes.map(n => `<div class="note-item"><span class="name">${n.name}</span> — ${n.note}</div>`).join('')}
+      </div>
+    `;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+// === 등록 폼 관련 ===
+
+// 요일 버튼 토글
+document.querySelectorAll('.day-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('selected');
+  });
+});
+
+// 선택된 못하는 요일 가져오기
+function getSelectedDays() {
+  const days = [];
+  document.querySelectorAll('.day-btn.selected').forEach(btn => {
+    days.push(btn.dataset.day);
+  });
+  return days;
+}
+
+// 메시지 표시
+function showMessage(elementId, type, text) {
+  const el = document.getElementById(elementId);
+  el.innerHTML = `<div class="message ${type}">${text}</div>`;
+  setTimeout(() => { el.innerHTML = ''; }, 5000);
+}
+
+// 내 정보 불러오기
+async function loadMyInfo() {
+  const nickname = document.getElementById('nickname').value.trim();
+  if (!nickname) {
+    showMessage('register-message', 'error', '닉네임을 입력하세요');
+    return;
+  }
+
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get', data: { 닉네임: nickname } })
+    });
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      const d = result.data;
+      document.getElementById('job').value = d.직업 || '';
+      document.getElementById('named').value = d.네임드 || '';
+      document.getElementById('startTime').value = d.시작시간 || '상관없음';
+      document.getElementById('endTime').value = d.종료시간 || '상관없음';
+      document.getElementById('raidType').value = d.레이드종류 || '트라이팟';
+      document.getElementById('note').value = d.참고사항 || '';
+      
+      document.querySelectorAll('.day-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        if (d.못하는요일 && d.못하는요일.includes(btn.dataset.day)) {
+          btn.classList.add('selected');
         }
+      });
+      
+      showMessage('register-message', 'success', '정보를 불러왔습니다');
+    } else {
+      showMessage('register-message', 'info', '등록된 정보가 없습니다. 새로 등록해주세요.');
+    }
+  } catch (error) {
+    showMessage('register-message', 'error', '불러오기 실패: ' + error.message);
+  }
+}
 
-        // 요일 버튼 토글 (등록폼)
-        document.querySelectorAll('.day-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.classList.toggle('selected');
-            });
-        });
+// 폼 제출
+async function submitForm() {
+  const nickname = document.getElementById('nickname').value.trim();
+  const job = document.getElementById('job').value;
+  
+  if (!nickname) {
+    showMessage('register-message', 'error', '닉네임을 입력하세요');
+    return;
+  }
+  if (!job) {
+    showMessage('register-message', 'error', '직업을 선택하세요');
+    return;
+  }
 
-        // 선택된 못하는 요일 가져오기
-        function getSelectedDays() {
-            const days = [];
-            document.querySelectorAll('.day-btn.selected').forEach(btn => {
-                days.push(btn.dataset.day);
-            });
-            return days;
-        }
+  const data = {
+    닉네임: nickname,
+    직업: job,
+    네임드: document.getElementById('named').value || '',
+    시작시간: document.getElementById('startTime').value,
+    종료시간: document.getElementById('endTime').value,
+    못하는요일: getSelectedDays(),
+    레이드종류: document.getElementById('raidType').value,
+    참고사항: document.getElementById('note').value || ''
+  };
 
-        // 메시지 표시
-        function showMessage(elementId, type, text) {
-            const el = document.getElementById(elementId);
-            el.innerHTML = `<div class="message ${type}">${text}</div>`;
-            setTimeout(() => { el.innerHTML = ''; }, 5000);
-        }
+  const btn = document.querySelector('.submit-btn');
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
 
-        // 내 정보 불러오기
-        async function loadMyInfo() {
-            const nickname = document.getElementById('nickname').value.trim();
-            if (!nickname) {
-                showMessage('register-message', 'error', '닉네임을 입력하세요');
-                return;
-            }
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'register', data })
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      showMessage('register-message', 'success', '저장되었습니다!');
+    } else {
+      showMessage('register-message', 'error', '저장 실패: ' + (result.message || '알 수 없는 오류'));
+    }
+  } catch (error) {
+    showMessage('register-message', 'error', '저장 실패: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '저장하기';
+  }
+}
 
-            try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'get', data: { 닉네임: nickname } })
-                });
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    const d = result.data;
-                    document.getElementById('job').value = d.직업 || '';
-                    document.getElementById('named').value = d.네임드 || '';
-                    document.getElementById('startTime').value = d.시작시간 || '상관없음';
-                    document.getElementById('endTime').value = d.종료시간 || '상관없음';
-                    document.getElementById('raidType').value = d.레이드종류 || '트라이팟';
-                    document.getElementById('note').value = d.참고사항 || '';
-                    
-                    document.querySelectorAll('.day-btn').forEach(btn => {
-                        btn.classList.remove('selected');
-                        if (d.못하는요일 && d.못하는요일.includes(btn.dataset.day)) {
-                            btn.classList.add('selected');
-                        }
-                    });
-                    
-                    showMessage('register-message', 'success', '정보를 불러왔습니다');
-                } else {
-                    showMessage('register-message', 'info', '등록된 정보가 없습니다. 새로 등록해주세요.');
-                }
-            } catch (error) {
-                showMessage('register-message', 'error', '불러오기 실패: ' + error.message);
-            }
-        }
+// 초기 로드
+loadPlayerList();
+</script>
 
-        // 폼 제출
-        async function submitForm() {
-            const nickname = document.getElementById('nickname').value.trim();
-            const job = document.getElementById('job').value;
-            
-            if (!nickname) {
-                showMessage('register-message', 'error', '닉네임을 입력하세요');
-                return;
-            }
-            if (!job) {
-                showMessage('register-message', 'error', '직업을 선택하세요');
-                return;
-            }
-
-            const data = {
-                닉네임: nickname,
-                직업: job,
-                네임드: document.getElementById('named').value || '',
-                시작시간: document.getElementById('startTime').value,
-                종료시간: document.getElementById('endTime').value,
-                못하는요일: getSelectedDays(),
-                레이드종류: document.getElementById('raidType').value,
-                참고사항: document.getElementById('note').value || ''
-            };
-
-            const btn = document.querySelector('.submit-btn');
-            btn.disabled = true;
-            btn.textContent = '저장 중...';
-
-            try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'register', data })
-                });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showMessage('register-message', 'success', '저장되었습니다!');
-                } else {
-                    showMessage('register-message', 'error', '저장 실패: ' + (result.message || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                showMessage('register-message', 'error', '저장 실패: ' + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '저장하기';
-            }
-        }
-
-        // 참가자 목록 불러오기
-        async function loadPlayerList() {
-            const container = document.getElementById('schedule-view');
-            container.innerHTML = '<div class="loading">불러오는 중...</div>';
-
-            try {
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'list' })
-                });
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    // 노션 API 응답 파싱
-                    allPlayers = result.data.map(player => {
-                        const props = player.properties || player;
-                        return {
-                            닉네임: props.닉네임?.title?.[0]?.text?.content || props.닉네임 || '???',
-                            직업: props.직업?.select?.name || props.직업 || '',
-                            네임드: props.네임드?.select?.name || props.네임드 || '',
-                            시작시간: props.시작시간?.select?.name || props.시작시간 || '상관없음',
-                            종료시간: props.종료시간?.select?.name || props.종료시간 || '상관없음',
-                            못하는요일: props.못하는요일?.multi_select?.map(m => m.name) || props.못하는요일 || [],
-                            레이드종류: props.레이드종류?.select?.name || props.레이드종류 || '트라이팟',
-                            참고사항: props.참고사항?.rich_text?.[0]?.text?.content || props.참고사항 || ''
-                        };
-                    });
-                    
-                    renderDayTabs();
-                    renderSchedule();
-                } else {
-                    container.innerHTML = '<div class="loading">등록된 참가자가 없습니다</div>';
-                }
-            } catch (error) {
-                container.innerHTML = `<div class="message error">불러오기 실패: ${error.message}</div>`;
-            }
-        }
-
-        // 요일 탭 렌더링
-        function renderDayTabs() {
-            const container = document.getElementById('day-tabs');
-            
-            // 각 요일별 참가 가능 인원 계산
-            const counts = {};
-            DAYS.forEach(day => {
-                counts[day] = allPlayers.filter(p => 
-                    p.레이드종류 === currentRaidType && 
-                    !p.못하는요일.includes(day)
-                ).length;
-            });
-            
-            container.innerHTML = DAYS.map(day => `
-                <div class="day-tab ${day === currentDay ? 'active' : ''}" data-day="${day}">
-                    <div class="day-name">${day}</div>
-                    <div class="day-count">${counts[day]}</div>
-                </div>
-            `).join('');
-            
-            // 이벤트 리스너
-            container.querySelectorAll('.day-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    currentDay = tab.dataset.day;
-                    container.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    renderSchedule();
-                });
-            });
-        }
-
-        // 레이드 타입 탭 이벤트
-        document.querySelectorAll('.raid-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                currentRaidType = tab.dataset.raid;
-                document.querySelectorAll('.raid-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                renderDayTabs();
-                renderSchedule();
-            });
-        });
-
-        // 일정 렌더링
-        function renderSchedule() {
-            const container = document.getElementById('schedule-view');
-            
-            // 현재 레이드 타입 + 요일로 필터링
-            const filtered = allPlayers.filter(p => 
-                p.레이드종류 === currentRaidType && 
-                !p.못하는요일.includes(currentDay)
-            );
-            
-            // 1넴, 2넴, 미정 분류
-            const named1 = filtered.filter(p => p.네임드 === '1넴');
-            const named2 = filtered.filter(p => p.네임드 === '2넴');
-            const namedNone = filtered.filter(p => !p.네임드 || p.네임드 === '');
-            
-            // 합계 표시
-            document.getElementById('total-count').textContent = 
-                `${currentDay}요일 참가 가능: 1넴 ${named1.length}명 / 2넴 ${named2.length}명 / 미정 ${namedNone.length}명 (총 ${filtered.length}명)`;
-            
-            container.innerHTML = `
-                <div class="named-column">
-                    <div class="named-header named-1">1넴 (${named1.length}명)</div>
-                    ${renderTimeGrid(named1)}
-                </div>
-                <div class="named-column">
-                    <div class="named-header named-2">2넴 (${named2.length}명)</div>
-                    ${renderTimeGrid(named2)}
-                </div>
-                ${namedNone.length > 0 ? `
-                <div class="named-column">
-                    <div class="named-header named-none">미정 (${namedNone.length}명)</div>
-                    ${renderTimeGrid(namedNone)}
-                </div>
-                ` : ''}
-            `;
-        }
-
-        // 시간 그리드 렌더링 (블록 형태)
-        function renderTimeGrid(players) {
-            const ROW_HEIGHT = 50;
-            
-            // 각 플레이어의 시간 범위 계산
-            const playerBars = players.map(p => {
-                let startIdx = TIME_ORDER.indexOf(p.시작시간);
-                let endIdx = TIME_ORDER.indexOf(p.종료시간);
-                
-                // 상관없음 처리
-                if (startIdx === -1) startIdx = 0;
-                if (endIdx === -1) endIdx = TIME_ORDER.length - 1;
-                
-                // 종료가 시작보다 작으면 (잘못된 입력) 수정
-                if (endIdx < startIdx) endIdx = startIdx;
-                
-                return {
-                    ...p,
-                    startIdx,
-                    endIdx,
-                    height: (endIdx - startIdx + 1) * ROW_HEIGHT
-                };
-            });
-            
-            // 겹치지 않게 레인 배정
-            const lanes = assignLanes(playerBars);
-            const maxLane = Math.max(...playerBars.map(p => p.lane || 0), 0);
-            const laneWidth = maxLane > 0 ? Math.floor(100 / (maxLane + 1)) : 100;
-            
-            // 시간 행 생성
-            let rows = TIME_ORDER.map((time, idx) => `
-                <div class="time-row" style="height: ${ROW_HEIGHT}px;">
-                    <div class="time-label">${TIME_LABELS[idx]}</div>
-                    <div class="time-content"></div>
-                </div>
-            `).join('');
-            
-            // 플레이어 바 생성
-            let bars = playerBars.map(p => {
-                const top = p.startIdx * ROW_HEIGHT;
-                const left = 70 + (p.lane || 0) * (laneWidth);
-                const width = laneWidth - 2;
-                const jobClass = p.직업 ? `job-${p.직업}` : 'job-unknown';
-                const title = `${p.닉네임}\n${p.직업}\n${TIME_LABELS[p.startIdx]} ~ ${TIME_LABELS[p.endIdx]}${p.참고사항 ? '\n' + p.참고사항 : ''}`;
-                
-                return `
-                    <div class="player-bar ${jobClass}" 
-                         style="top: ${top}px; left: ${left}px; width: calc(${width}% - 70px); height: ${p.height}px;"
-                         title="${title}">
-                        <div class="bar-content">${p.닉네임}</div>
-                    </div>
-                `;
-            }).join('');
-            
-            return `<div class="time-grid" style="position: relative;">${rows}${bars}</div>`;
-        }
-
-        // 레인 배정 (겹치지 않게)
-        function assignLanes(players) {
-            // 시작 시간 순으로 정렬
-            players.sort((a, b) => a.startIdx - b.startIdx);
-            
-            const laneEnds = []; // 각 레인의 끝 인덱스
-            
-            players.forEach(p => {
-                // 사용 가능한 레인 찾기
-                let assignedLane = -1;
-                for (let i = 0; i < laneEnds.length; i++) {
-                    if (laneEnds[i] < p.startIdx) {
-                        assignedLane = i;
-                        break;
-                    }
-                }
-                
-                if (assignedLane === -1) {
-                    // 새 레인 생성
-                    assignedLane = laneEnds.length;
-                    laneEnds.push(p.endIdx);
-                } else {
-                    laneEnds[assignedLane] = p.endIdx;
-                }
-                
-                p.lane = assignedLane;
-            });
-            
-            return players;
-        }
-    </script>
 </body>
 </html>
