@@ -2655,7 +2655,7 @@ function renderEditMode(container, players) {
 // 참고사항 렌더링 - 참고사항 있는 사람만!
 function renderNotes() {
   const notes = allPlayers
-    .filter(p => p.참고사항 && p.참고사항.trim() !== '' && p.레이드종류 === currentRaidType)
+    .filter(p => p.참고사항 && String(p.참고사항).trim() !== '' && p.레이드종류 === currentRaidType)
     .map(p => ({ name: p.닉네임, note: p.참고사항 }));
   
   const container = document.getElementById('notes-section');
