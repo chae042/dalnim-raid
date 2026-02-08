@@ -1789,13 +1789,13 @@ function formatWeekLabel(weekStart) {
   return `${start.getMonth()+1}/${start.getDate()}~${end.getMonth()+1}/${end.getDate()}`;
 }
 
-// 지난 주차 목록 생성 (최근 4주)
+// 주차 목록 생성 (다음 주 + 이번 주 + 최근 3주)
 function getWeekOptions() {
   const weeks = [];
   const current = getCurrentWeekStart();
   const [cy, cm, cd] = current.split('-').map(Number);
   
-  for (let i = 0; i < 4; i++) {
+  for (let i = -1; i < 4; i++) {
     const d = new Date(cy, cm - 1, cd - (i * 7));
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -1805,6 +1805,22 @@ function getWeekOptions() {
   return weeks;
 }
 
+// 다음 주 시작일 계산
+function getNextWeekStart() {
+  const current = getCurrentWeekStart();
+  const [cy, cm, cd] = current.split('-').map(Number);
+  const d = new Date(cy, cm - 1, cd + 7);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// 현재 주차 또는 다음 주차인지 확인 (편집 허용 범위)
+function isEditableWeek() {
+  return currentWeekStart === getCurrentWeekStart() || currentWeekStart === getNextWeekStart();
+}
+
 // 주차 드롭다운 렌더링
 function renderWeekSelect() {
   const select = document.getElementById('week-select');
@@ -1812,11 +1828,16 @@ function renderWeekSelect() {
   
   const weeks = getWeekOptions();
   const current = getCurrentWeekStart();
+  const next = getNextWeekStart();
   
   select.innerHTML = weeks.map((w, i) => {
     const label = formatWeekLabel(w);
-    const isCurrent = w === current;
-    const displayText = isCurrent ? `📌 이번 주 ${label}` : label;
+    let displayText = label;
+    if (w === current) {
+      displayText = `📌 이번 주 ${label}`;
+    } else if (w === next) {
+      displayText = `🔜 다음 주 ${label}`;
+    }
     return `<option value="${w}" ${w === (currentWeekStart || current) ? 'selected' : ''}>${displayText}</option>`;
   }).join('');
 }
@@ -1826,8 +1847,8 @@ function onWeekSelect() {
   const select = document.getElementById('week-select');
   currentWeekStart = select.value;
   
-  // 지난 주차 선택 시 편집 모드 종료
-  if (!isCurrentWeek()) {
+  // 편집 불가 주차 선택 시 편집 모드 종료
+  if (!isEditableWeek()) {
     if (currentMode === 'edit') {
       currentMode = 'view';
       const btn = document.getElementById('edit-mode-btn');
@@ -1850,7 +1871,7 @@ function isCurrentWeek() {
 // 편집 버튼 상태 업데이트
 function updateEditButtonState() {
   const btn = document.getElementById('edit-mode-btn');
-  if (isCurrentWeek()) {
+  if (isEditableWeek()) {
     btn.disabled = false;
     btn.title = '';
     btn.style.opacity = '1';
@@ -2034,7 +2055,7 @@ async function loadRaidSettings() {
         const props = item.properties || item;
         return {
           id: item.id,
-          레이드명: props.레이드명?.title?.[0]?.text?.content || '',
+          레이드명: (props.레이드명?.title?.[0]?.text?.content || '').trim(),
           레이드종류: props.레이드종류?.select?.name || '',
           네임드수: props.네임드수?.number || 2,
           필요인원: props.필요인원?.number || 8,
@@ -2139,17 +2160,19 @@ async function loadPlayerList() {
     if (result.success && result.data) {
       allPlayers = result.data.map(player => {
         const props = player.properties || player;
-        // 레이드종류가 relation이면 ID로 이름 찾기
+        // 레이드가 relation이면 ID로 이름 찾기
         let raidType = '';
-        if (props.레이드종류?.relation?.[0]?.id) {
-          raidType = raidIdToName[props.레이드종류.relation[0].id] || '';
-        } else {
-          raidType = props.레이드종류?.select?.name || props.레이드종류 || '';
+        if (props.레이드?.relation?.[0]?.id) {
+          raidType = raidIdToName[props.레이드.relation[0].id] || '';
+        } else if (props.레이드종류?.select?.name) {
+          raidType = props.레이드종류.select.name;
+        } else if (props.레이드종류) {
+          raidType = props.레이드종류;
         }
         
         return {
           id: player.id, // 노션 페이지 ID
-          닉네임: props.닉네임?.title?.[0]?.text?.content || props.닉네임 || '???',
+          닉네임: (props.닉네임?.title?.[0]?.text?.content || props.닉네임 || '???').trim(),
           직업: props.직업?.select?.name || props.직업 || '',
           네임드: props.네임드?.select?.name || props.네임드 || '',
           시작시간: props.시작시간?.select?.name || props.시작시간 || '상관없음',
@@ -2166,7 +2189,7 @@ async function loadPlayerList() {
       renderNotes();
       updateEditButtonState();
     } else {
-      container.innerHTML = '<div class="loading">등록된 참가자가 없습니다</div>';
+      container.innerHTML = '<div class="loading">아직 등록된 참가자가 없어요 🌙<br><span style="font-size:13px;color:#666;margin-top:8px;display:block;">✏️ 버튼으로 미리 등록해보세요!</span></div>';
       updateEditButtonState();
     }
   } catch (error) {
@@ -2634,7 +2657,7 @@ async function loadMyInfo() {
       
       // 폼 필드 채우기 (순서 중요: 레이드 → 네임드 옵션 업데이트 → 네임드 선택)
       document.getElementById('job').value = d.직업 || '';
-      document.getElementById('raidType').value = d.레이드종류 || raidSettings[0]?.레이드명 || '';
+      document.getElementById('raidType').value = raidSettings.find(r => r.레이드명 === d.레이드종류)?.id || raidSettings[0]?.id || '';
       updateNamedOptions(); // 레이드 변경 후 네임드 옵션 업데이트
       document.getElementById('named').value = d.네임드 || '';
       document.getElementById('startTime').value = d.시작시간 || '상관없음';
@@ -2710,7 +2733,10 @@ async function deleteMyRegistration() {
   }
 }
 
+let _submittingForm = false;
 async function submitForm() {
+  if (_submittingForm) return;
+  _submittingForm = true;
   const nickname = document.getElementById('nickname').value.trim();
   const job = document.getElementById('job').value;
   
@@ -2731,7 +2757,7 @@ async function submitForm() {
     '시작시간': document.getElementById('startTime').value,
     '종료시간': document.getElementById('endTime').value,
     '못하는요일': getSelectedDays(),
-    '레이드종류': document.getElementById('raidType').value,
+    '레이드ID': document.getElementById('raidType').value,
     '참고사항': document.getElementById('note').value || '',
     'weekStart': weekStart,
     'weekEnd': getWeekEnd(weekStart)
@@ -2774,6 +2800,7 @@ async function submitForm() {
   } finally {
     btn.disabled = false;
     btn.textContent = '저장하기';
+    _submittingForm = false;
   }
 }
 
@@ -3369,7 +3396,7 @@ function openRegisterModal() {
   // 레이드 종류 select 업데이트 (현재 탭 기본 선택)
   const select = document.getElementById('raidType');
   select.innerHTML = raidSettings.map(r => 
-    `<option value="${r.레이드명}" ${r.레이드명 === currentRaidType ? 'selected' : ''}>${r.레이드명}</option>`
+    `<option value="${r.id}" ${r.레이드명 === currentRaidType ? 'selected' : ''}>${r.레이드명}</option>`
   ).join('');
   
   // 초기 네임드 옵션 설정
@@ -3384,8 +3411,8 @@ function openRegisterModal() {
 
 // 네임드 드롭다운 동적 업데이트
 function updateNamedOptions() {
-  const raidName = document.getElementById('raidType').value;
-  const raid = raidSettings.find(r => r.레이드명 === raidName);
+  const raidId = document.getElementById('raidType').value;
+  const raid = raidSettings.find(r => r.id === raidId);
   const namedCount = raid?.네임드수 || 2;
   
   const select = document.getElementById('named');
@@ -3554,7 +3581,10 @@ function loadRaidSettingsForEdit() {
   }
 }
 
+let _savingRaidSettings = false;
 async function saveRaidSettings() {
+  if (_savingRaidSettings) return;
+  _savingRaidSettings = true;
   const selectedId = document.getElementById('settings-raid-select').value;
   const name = document.getElementById('edit-raid-name').value.trim();
   const namedCount = parseInt(document.getElementById('edit-raid-named-count').value);
@@ -3572,10 +3602,6 @@ async function saveRaidSettings() {
     return;
   }
   
-  // 기존 레이드 정보
-  const oldRaid = raidSettings.find(r => r.id === selectedId);
-  const oldName = oldRaid?.레이드명;
-  
   try {
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
@@ -3585,7 +3611,6 @@ async function saveRaidSettings() {
         data: {
           id: selectedId,
           레이드명: name,
-          oldName: oldName, // 이름 변경 시 참가자 연동용
           네임드수: namedCount,
           필요인원: required,
           활성화: true,
@@ -3599,19 +3624,22 @@ async function saveRaidSettings() {
       closeModal('raid-settings-modal');
       
       // 이름 변경 시 localStorage도 업데이트
-      if (oldName !== name && currentRaidType === oldName) {
+      const prevName = raidSettings.find(r => r.id === selectedId)?.레이드명;
+      if (prevName !== name && currentRaidType === prevName) {
         currentRaidType = name;
         localStorage.setItem('dalnim_lastRaid', name);
       }
       
       await loadRaidSettings();
       renderRaidTabs();
-      renderSchedule();
+      await loadPlayerList(); // 레이드명 변경 후 참가자/배치 즉시 반영
     } else {
       showToast('저장에 실패했어요🌙', 'error');
     }
   } catch (error) {
     showToast('저장에 실패했어요🌙', 'error');
+  } finally {
+    _savingRaidSettings = false;
   }
 }
 
