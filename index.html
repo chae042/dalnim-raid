@@ -1744,11 +1744,22 @@ function handleConfirm(result) {
   }
 }
 
+// XSS 방어용 이스케이프 함수
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // 현재 주차 시작일(수요일) 계산
 function getCurrentWeekStart() {
   const today = new Date();
   const day = today.getDay(); // 0=일, 1=월, ..., 3=수
-  let diff = day - 3;
+  let diff = day - 3; // 3 = 수요일
   if (diff < 0) diff += 7;
   const wed = new Date(today);
   wed.setDate(today.getDate() - diff);
@@ -2090,7 +2101,7 @@ function renderRaidTabs() {
     const activeClass = r.레이드명 === currentRaidType ? 'active' : '';
     
     return `<div class="raid-tab ${activeClass} ${expiredClass}" 
-         data-raid="${r.레이드명}"
+         data-raid="${escapeHtml(r.레이드명)}"
          data-id="${r.id}"
          data-expired="${expired}"
          draggable="true"
@@ -2098,7 +2109,7 @@ function renderRaidTabs() {
          ondragover="onTabDragOver(event)"
          ondrop="onTabDrop(event)"
          ondragend="onTabDragEnd(event)"
-         onclick="selectRaidType('${r.레이드명}')">${r.레이드명}</div>`;
+         onclick="selectRaidType('${escapeHtml(r.레이드명)}')">${escapeHtml(r.레이드명)}</div>`;
   }).join('');
 }
 
@@ -2306,9 +2317,9 @@ function renderViewMode(container, players) {
       const height = (s.endIdx - s.startIdx + 1) * ROW_HEIGHT - 4;
       const left = s.lane * laneWidth + 2;
       const width = laneWidth - 4;
-      const tooltip = s.닉네임 + (s.참고사항 ? ' - ' + s.참고사항 : '');
+      const tooltip = escapeHtml(s.닉네임) + (s.참고사항 ? ' - ' + escapeHtml(s.참고사항) : '');
       return `<div class="timeline-block ${jobInfo.class}" style="top:${top}px; height:${height}px; left:${left}px; width:${width}px;" title="${tooltip}">
-        <span class="job-icon">${jobInfo.icon}</span>${s.닉네임}
+        <span class="job-icon">${jobInfo.icon}</span>${escapeHtml(s.닉네임)}
       </div>`;
     }).join('');
   };
@@ -2474,11 +2485,11 @@ function renderEditMode(container, players) {
         const disabledClass = isHidden ? 'disabled' : '';
         return `<td class="player-lane-cell">
           <span class="player-chip ${jobInfo.class} ${disabledClass}" 
-                data-player="${p.닉네임}" 
+                data-player="${escapeHtml(p.닉네임)}" 
                 data-nem="${nemType}" 
                 data-time="${timeIdx}"
-                title="${p.참고사항 || ''}">
-            <span class="job-icon">${jobInfo.icon}</span>${p.닉네임}
+                title="${escapeHtml(p.참고사항 || '')}">
+            <span class="job-icon">${jobInfo.icon}</span>${escapeHtml(p.닉네임)}
           </span>
         </td>`;
       } else {
@@ -2553,7 +2564,7 @@ function renderNotes() {
     container.innerHTML = `
       <div class="notes">
         <h3>📌 참고 사항</h3>
-        ${notes.map(n => `<div class="note-item"><span class="name">${n.name}</span> — ${n.note}</div>`).join('')}
+        ${notes.map(n => `<div class="note-item"><span class="name">${escapeHtml(n.name)}</span> — ${escapeHtml(n.note)}</div>`).join('')}
       </div>
     `;
   } else {
@@ -2579,7 +2590,7 @@ function getSelectedDays() {
 
 function showMessage(elementId, type, text) {
   const el = document.getElementById(elementId);
-  el.innerHTML = `<div class="message ${type}">${text}</div>`;
+  el.innerHTML = `<div class="message ${type}">${escapeHtml(text)}</div>`;
   setTimeout(() => { el.innerHTML = ''; }, 5000);
 }
 
