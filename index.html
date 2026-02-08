@@ -2848,7 +2848,7 @@ function toggleEditMode() {
   const btn = document.getElementById('edit-mode-btn');
   
   // 지난 주차면 편집 모드 진입 차단
-  if (currentMode === 'view' && !isCurrentWeek()) {
+  if (currentMode === 'view' && !isEditableWeek()) {
     showToast('지난 주차는 편집할 수 없어요🌙');
     return;
   }
