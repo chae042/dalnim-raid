@@ -2931,6 +2931,15 @@ function toggleEditMode() {
   }
   
   if (currentMode === 'view') {
+    // 비번 확인 (한 번 인증하면 기기에 저장)
+    if (!localStorage.getItem('dalnim_editAuth')) {
+      const pw = prompt('편집 모드 비밀번호를 입력하세요 🌙');
+      if (pw !== '2291') {
+        showToast('비밀번호가 틀렸어요🌙', 'error');
+        return;
+      }
+      localStorage.setItem('dalnim_editAuth', 'true');
+    }
     currentMode = 'edit';
     btn.textContent = '✏️ 편집 모드';
     btn.classList.add('active');
