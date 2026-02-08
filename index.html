@@ -1436,7 +1436,7 @@
     <!-- 편집 모드 버튼 -->
     <div class="edit-mode-bar">
       <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">✅ 편집 완료</button>
-      <button class="edit-mode-btn" id="copy-lastweek-btn" onclick="copyFromLastWeek()" style="display:none; background:linear-gradient(135deg,#6366f1,#8b5cf6);">📋 지난 주 불러오기</button>
+      <button class="edit-mode-btn" id="copy-lastweek-btn" onclick="copyFromLastWeek()" style="display:none; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff;">📋 지난 주 불러오기</button>
     </div>
 
     <!-- 요일 탭 -->
@@ -2210,6 +2210,9 @@ async function loadPlayerList() {
 let _copyingFromLastWeek = false;
 async function copyFromLastWeek() {
   if (_copyingFromLastWeek) return;
+  
+  if (!confirm(`지난 주 ${currentRaidType} 멤버를 불러올까요?`)) return;
+  
   _copyingFromLastWeek = true;
   
   const copyBtn = document.getElementById('copy-lastweek-btn');
