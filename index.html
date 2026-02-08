@@ -1436,6 +1436,7 @@
     <!-- 편집 모드 버튼 -->
     <div class="edit-mode-bar">
       <button class="edit-mode-btn" id="edit-mode-btn" onclick="toggleEditMode()">✅ 편집 완료</button>
+      <button class="edit-mode-btn" id="copy-lastweek-btn" onclick="copyFromLastWeek()" style="display:none; background:linear-gradient(135deg,#6366f1,#8b5cf6);">📋 지난 주 불러오기</button>
     </div>
 
     <!-- 요일 탭 -->
@@ -1871,14 +1872,18 @@ function isCurrentWeek() {
 // 편집 버튼 상태 업데이트
 function updateEditButtonState() {
   const btn = document.getElementById('edit-mode-btn');
+  const copyBtn = document.getElementById('copy-lastweek-btn');
   if (isEditableWeek()) {
     btn.disabled = false;
     btn.title = '';
     btn.style.opacity = '1';
+    // 편집 모드 + 편집 가능 주차일 때만 불러오기 버튼 표시
+    if (copyBtn) copyBtn.style.display = (currentMode === 'edit') ? '' : 'none';
   } else {
     btn.disabled = true;
     btn.title = '지난 주차는 편집할 수 없습니다';
     btn.style.opacity = '0.5';
+    if (copyBtn) copyBtn.style.display = 'none';
   }
 }
 
@@ -2189,11 +2194,80 @@ async function loadPlayerList() {
       renderNotes();
       updateEditButtonState();
     } else {
-      container.innerHTML = '<div class="loading">아직 등록된 참가자가 없어요 🌙<br><span style="font-size:13px;color:#666;margin-top:8px;display:block;">✏️ 버튼으로 미리 등록해보세요!</span></div>';
+      if (isEditableWeek()) {
+        container.innerHTML = '<div class="loading">아직 등록된 참가자가 없어요 🌙<br><span style="font-size:13px;color:#666;margin-top:8px;display:block;">✏️ 버튼으로 직접 등록하거나 📋 지난 주 불러오기를 해보세요!</span></div>';
+      } else {
+        container.innerHTML = '<div class="loading">등록된 참가자가 없어요 🌙</div>';
+      }
       updateEditButtonState();
     }
   } catch (error) {
     container.innerHTML = `<div class="loading">❌ 불러오기 실패: ${error.message}</div>`;
+  }
+}
+
+// 지난 주 멤버 불러오기 (현재 탭 레이드만, 중복 닉네임 건너뛰기)
+let _copyingFromLastWeek = false;
+async function copyFromLastWeek() {
+  if (_copyingFromLastWeek) return;
+  _copyingFromLastWeek = true;
+  
+  const copyBtn = document.getElementById('copy-lastweek-btn');
+  if (copyBtn) {
+    copyBtn.disabled = true;
+    copyBtn.textContent = '⏳ 불러오는 중...';
+  }
+  
+  // 현재 탭의 레이드 ID
+  const currentRaid = raidSettings.find(r => r.레이드명 === currentRaidType);
+  if (!currentRaid) {
+    showToast('레이드 정보를 찾을 수 없어요🌙', 'error');
+    _copyingFromLastWeek = false;
+    if (copyBtn) { copyBtn.disabled = false; copyBtn.textContent = '📋 지난 주 불러오기'; }
+    return;
+  }
+  
+  // 이전 주 시작일 계산
+  const [y, m, d] = currentWeekStart.split('-').map(Number);
+  const prevDate = new Date(y, m - 1, d - 7);
+  const prevWeekStart = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-${String(prevDate.getDate()).padStart(2, '0')}`;
+  
+  // 이미 등록된 닉네임 목록 (중복 방지)
+  const existingNicknames = allPlayers
+    .filter(p => p.레이드종류 === currentRaidType)
+    .map(p => p.닉네임);
+  
+  try {
+    const response = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'copyFromLastWeek',
+        data: {
+          fromWeekStart: prevWeekStart,
+          toWeekStart: currentWeekStart,
+          toWeekEnd: getWeekEnd(currentWeekStart),
+          raidId: currentRaid.id,
+          existingNicknames: existingNicknames
+        }
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      const msg = result.count > 0 
+        ? `${result.count}명을 불러왔어요 🌙${result.skipped ? ` (${result.skipped}명 중복 건너뜀)` : ''}`
+        : '새로 불러올 멤버가 없어요 🌙';
+      showToast(msg, result.count > 0 ? 'success' : 'error');
+      await loadPlayerList();
+    } else {
+      showToast(result.message || '불러오기에 실패했어요🌙', 'error');
+    }
+  } catch (error) {
+    showToast('불러오기에 실패했어요🌙', 'error');
+  } finally {
+    _copyingFromLastWeek = false;
+    if (copyBtn) { copyBtn.disabled = false; copyBtn.textContent = '📋 지난 주 불러오기'; }
   }
 }
 
@@ -2864,6 +2938,9 @@ function toggleEditMode() {
     btn.classList.remove('active');
     document.getElementById('edit-hint').style.display = 'none';
     clearSelection();
+  }
+  
+  updateEditButtonState();
   }
   
   renderSchedule();
